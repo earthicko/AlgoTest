@@ -6,8 +6,8 @@
 #define MAX_COL 1500
 
 typedef struct coord {
-    int row;
-    int col;
+    short row;
+    short col;
 } coord;
 
 typedef struct queue_node {
@@ -26,31 +26,24 @@ int push_queue(coord new_val, queue* target);
 coord pop_queue(queue* target);
 int print_queue(queue* target);
 
-int num_row, num_col;
+short num_row, num_col;
 char map[MAX_ROW][MAX_COL];
-int melting_date[MAX_ROW][MAX_COL];
-int max_melting_date = 0;
+short melting_date[MAX_ROW][MAX_COL];
+short max_melting_date = 0;
 char visited[MAX_ROW][MAX_COL];
 coord swan_coords[2];
 
-int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+short directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
 int calculate_melting_date();
 char check_swan_meeting_possibility(int max_days);
 
 int main() {
-    scanf("%d %d", &num_row, &num_col);
+    scanf("%hi %hi", &num_row, &num_col);
 
     int i, j;
-    char buffer;
     for (i = 0; i < num_row; i++) {
-        for (j = 0; j < num_col; j++) {
-            scanf("%c", &buffer);
-            if (buffer == '\n') {
-                scanf("%c", &buffer);
-            }
-            map[i][j] = buffer;
-        }
+        scanf("%s", map[i]);
     }
 
     // printf("\nGiven map:\n");
@@ -72,11 +65,11 @@ int main() {
     // printf("Swan is on (%d, %d), (%d, %d)\n", swan_coords[0].row,
     //        swan_coords[0].col, swan_coords[1].row, swan_coords[1].col);
 
-    int min = 0;
-    int max = max_melting_date;
+    short min = 0;
+    short max = max_melting_date;
 
     while (min <= max) {
-        int mid = (min + max) / 2;
+        short mid = (min + max) / 2;
         // printf("Checking %d days\n", mid);
         if (check_swan_meeting_possibility(mid)) {
             max = mid - 1;

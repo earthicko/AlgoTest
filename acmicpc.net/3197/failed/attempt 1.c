@@ -39,18 +39,11 @@ int calculate_melting_date();
 char check_swan_meeting_possibility(int max_days);
 
 int main() {
-    scanf("%d %d", &num_row, &num_col);
+    scanf("%hi %hi", &num_row, &num_col);
 
     int i, j;
-    char buffer;
     for (i = 0; i < num_row; i++) {
-        for (j = 0; j < num_col; j++) {
-            scanf("%c", &buffer);
-            if (buffer == '\n') {
-                scanf("%c", &buffer);
-            }
-            map[i][j] = buffer;
-        }
+        scanf("%s", map[i]);
     }
 
     // printf("\nGiven map:\n");
