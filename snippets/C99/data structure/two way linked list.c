@@ -1,22 +1,22 @@
-struct num {
+struct node {
     int data;
-    struct num* left;
-    struct num* right;
+    struct node* left;
+    struct node* right;
 };
 
-struct num* construct_node(int val) {
-    struct num* constructed = (struct num*)malloc(sizeof(struct num));
+struct node* construct_node(int val) {
+    struct node* constructed = (struct node*)malloc(sizeof(struct node));
     constructed->data = val;
     constructed->left = NULL;
     constructed->right = NULL;
     return constructed;
 }
 
-struct num* insert_node(struct num* reference, int val, char direction) {
+struct node* insert_node(struct node* reference, int val, char direction) {
     // direction) 0: left / 1: right
 
-    struct num* inserted = (struct num*)malloc(sizeof(struct num));
-    struct num* temp;
+    struct node* inserted = (struct node*)malloc(sizeof(struct node));
+    struct node* temp;
     inserted->data = val;
 
     if (direction) {
@@ -38,7 +38,7 @@ struct num* insert_node(struct num* reference, int val, char direction) {
     return inserted;
 }
 
-int scan_nodes(struct num* start) {
+int scan_nodes(struct node* start) {
     printf("All nodes: ");
     while (start->left != NULL) start = start->left;
     while (start != NULL) {
