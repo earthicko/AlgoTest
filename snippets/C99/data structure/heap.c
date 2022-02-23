@@ -1,11 +1,19 @@
 #define N 69420
 
-struct heap {
+typedef struct heap {
     int (*bottom_sorter)(int, struct heap*);
     int (*top_sorter)(int, struct heap*);
     int last_index;  // index where last element is (0 when empty)
     short data[N];   // 1: root / 2~3: level 1 / 4~7: level 2...
-};
+} heap;
+
+int sort_min_heap_from_bottom(int start_index, struct heap* target);
+int sort_min_heap_from_top(int start_index, struct heap* target);
+int sort_max_heap_from_bottom(int start_index, struct heap* target);
+int sort_max_heap_from_top(int start_index, struct heap* target);
+int put_heap(short new_val, struct heap* target);
+short get_heap(struct heap* target);
+int print_heap(struct heap* target);
 
 int sort_min_heap_from_bottom(int start_index, struct heap* target) {
     if (start_index == 1) return 0;
