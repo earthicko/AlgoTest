@@ -1,23 +1,55 @@
-struct node {
+#include <stdio.h>
+
+typedef struct node {
     int data;
     struct node* left;
     struct node* right;
-};
+    struct list* parent;
+} node;
 
-struct node* construct_node(int val) {
-    struct node* constructed = (struct node*)malloc(sizeof(struct node));
-    constructed->data = val;
-    constructed->left = NULL;
-    constructed->right = NULL;
+typedef struct list {
+    int num_nodes;
+    node* head;
+    node* tail;
+} list;
+
+list* construct_list() {
+    list* constructed = (list*)malloc(sizeof(list));
+    constructed->num_nodes = 0;
+    constructed->head = NULL;
+    constructed->tail = NULL;
     return constructed;
 }
 
-struct node* insert_node(struct node* reference, int val, char direction) {
+node* construct_node(int val, list* p) {
+    node* constructed = (node*)malloc(sizeof(node));
+    constructed->data = val;
+    constructed->left = NULL;
+    constructed->right = NULL;
+    constructed->parent = p;
+    return constructed;
+}
+
+node* append_node(list* target, int val) {
+    node* new_node = construct_node(val, target);
+    if (target->num_nodes == 0) {
+        target->head = new_node;
+        target->tail = new_node;
+    } else {
+        target->tail->right = new_node;
+        new_node->left = target->tail;
+        target->tail = new_node;
+    }
+    target->num_nodes++;
+    return new_node;
+}
+
+node* insert_node(node* reference, int val, char direction) {
     // direction) 0: left / 1: right
 
-    struct node* inserted = (struct node*)malloc(sizeof(struct node));
-    struct node* temp;
-    inserted->data = val;
+    node* inserted = construct_node(val, reference->parent);
+    node* temp;
+    inserted->parent->num_nodes++;
 
     if (direction) {
         // right
@@ -25,14 +57,20 @@ struct node* insert_node(struct node* reference, int val, char direction) {
         reference->right = inserted;
         inserted->left = reference;
         inserted->right = temp;
-        if (temp != NULL) temp->left = inserted;
+        if (temp != NULL)
+            temp->left = inserted;
+        else
+            inserted->parent->tail = inserted;
     } else {
         // left
         temp = reference->left;
         reference->left = inserted;
         inserted->right = reference;
         inserted->left = temp;
-        if (temp != NULL) temp->right = inserted;
+        if (temp != NULL)
+            temp->right = inserted;
+        else
+            inserted->parent->head = inserted;
     }
 
     return inserted;
