@@ -29,58 +29,45 @@ int sort_min_heap_from_bottom(int start_index, struct heap* target) {
     return 0;
 }
 
-int sort_min_heap_from_top(int start_index, struct heap* target) {
-    int left_index = start_index * 2;
-    int right_index = start_index * 2 + 1;
+int sort_min_heap_from_top(int s_idx, struct heap* target) {
+    int l_idx = s_idx * 2;
+    int r_idx = s_idx * 2 + 1;
 
-    short parent, left_child, right_child, temp;
+    short parent, l, r, temp;
 
-    char swap_with_whom = 0;
-    if (left_index <= target->last_index) {
+    char swap = 0;
+    if (l_idx <= target->last_index) {
         // left child exists
-        parent = target->data[start_index];
-        left_child = target->data[left_index];
-
-        if (right_index <= target->last_index) {
-            // right child exists
-            right_child = target->data[right_index];
-
-            if (left_child < parent && right_child < parent) {
-                // both children are smaller
-                if (left_child <= right_child) {
-                    swap_with_whom = 1;  // swap with left child
-                } else {
-                    swap_with_whom = 2;  // swap with right child
-                }
-            } else if (left_child < parent) {
-                // only left child is smaller
-                swap_with_whom = 1;  // swap with left child
-            } else if (right_child < parent) {
-                // only right child is smaller
-                swap_with_whom = 2;  // swap with right child
+        parent = target->data[s_idx];
+        l = target->data[l_idx];
+        if (r_idx <= target->last_index) {  // right child exists
+            r = target->data[r_idx];
+            if (l < parent && r < parent) {  // both children are smaller
+                if (l <= r)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;         // swap with right child
+            } else if (l < parent) {  // only left child is smaller
+                swap = 1;             // swap with left child
+            } else if (r < parent) {  // only right child is smaller
+                swap = 2;             // swap with right child
             }
         } else {
-            if (left_child < parent) {
-                swap_with_whom = 1;  // swap with left child
-            }
+            if (l < parent) swap = 1;  // swap with left child
         }
     }
-
-    switch (swap_with_whom) {
-        case 0:
-            // do nothing
+    switch (swap) {
+        case 0:  // do nothing
             break;
-        case 1:
-            // swap with left child
-            target->data[left_index] = parent;
-            target->data[start_index] = left_child;
-            sort_min_heap_from_top(left_index, target);
+        case 1:  // swap with left child
+            target->data[l_idx] = parent;
+            target->data[s_idx] = l;
+            sort_min_heap_from_top(l_idx, target);
             break;
-        case 2:
-            // swap with right child
-            target->data[right_index] = parent;
-            target->data[start_index] = right_child;
-            sort_min_heap_from_top(right_index, target);
+        case 2:  // swap with right child
+            target->data[r_idx] = parent;
+            target->data[s_idx] = r;
+            sort_min_heap_from_top(r_idx, target);
             break;
         default:
             break;
@@ -103,63 +90,48 @@ int sort_max_heap_from_bottom(int start_index, struct heap* target) {
     return 0;
 }
 
-int sort_max_heap_from_top(int start_index, struct heap* target) {
-    int left_index = start_index * 2;
-    int right_index = start_index * 2 + 1;
+int sort_max_heap_from_top(int s_idx, struct heap* target) {
+    int l_idx = s_idx * 2;
+    int r_idx = s_idx * 2 + 1;
 
-    short parent, left_child, right_child, temp;
+    short parent, l, r, temp;
 
-    char swap_with_whom = 0;
-    if (left_index <= target->last_index) {
-        // left child exists
-        parent = target->data[start_index];
-        left_child = target->data[left_index];
-
-        if (right_index <= target->last_index) {
-            // right child exists
-            right_child = target->data[right_index];
-
-            if (left_child > parent && right_child > parent) {
-                // both children are bigger
-                if (left_child >= right_child) {
-                    swap_with_whom = 1;  // swap with left child
-                } else {
-                    swap_with_whom = 2;  // swap with right child
-                }
-            } else if (left_child > parent) {
-                // only left child is bigger
-                swap_with_whom = 1;  // swap with left child
-            } else if (right_child > parent) {
-                // only right child is bigger
-                swap_with_whom = 2;  // swap with right child
+    char swap = 0;
+    if (l_idx <= target->last_index) {  // left child exists
+        parent = target->data[s_idx];
+        l = target->data[l_idx];
+        if (r_idx <= target->last_index) {  // right child exists
+            r = target->data[r_idx];
+            if (l > parent && r > parent) {  // both children are bigger
+                if (l >= r)                  // swap with left child
+                    swap = 1;
+                else  // swap with right child
+                    swap = 2;
+            } else if (l > parent) {  // only left child is bigger
+                swap = 1;             // swap with left child
+            } else if (r > parent) {  // only right child is bigger
+                swap = 2;             // swap with right child
             }
         } else {
-            if (left_child > parent) {
-                swap_with_whom = 1;  // swap with left child
-            }
+            if (l > parent) swap = 1;  // swap with left child
         }
     }
-
-    switch (swap_with_whom) {
-        case 0:
-            // do nothing
+    switch (swap) {
+        case 0:  // do nothing
             break;
-        case 1:
-            // swap with left child
-            target->data[left_index] = parent;
-            target->data[start_index] = left_child;
-            sort_max_heap_from_top(left_index, target);
+        case 1:  // swap with left child
+            target->data[l_idx] = parent;
+            target->data[s_idx] = l;
+            sort_max_heap_from_top(l_idx, target);
             break;
-        case 2:
-            // swap with right child
-            target->data[right_index] = parent;
-            target->data[start_index] = right_child;
-            sort_max_heap_from_top(right_index, target);
+        case 2:  // swap with right child
+            target->data[r_idx] = parent;
+            target->data[s_idx] = r;
+            sort_max_heap_from_top(r_idx, target);
             break;
         default:
             break;
     }
-
     return 0;
 }
 
