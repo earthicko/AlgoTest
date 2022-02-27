@@ -1,12 +1,5 @@
-/*
-수열 길이 1 <= N <= 2,000
-수 크기 1 <= Ai <= 100,000
-질문 개수 ~ 1,000,000개
-
-An부터 Am이 팰린드롬인지 저장하는 배열 char[2000][2000] = 1B * 4,000,000 = 4MB
-*/
-
 #include <stdio.h>
+#include <string.h>
 
 #ifdef ONLINE_JUDGE
 #define NDEBUG
@@ -16,51 +9,67 @@ An부터 Am이 팰린드롬인지 저장하는 배열 char[2000][2000] = 1B * 4,
 
 int N, M;
 int numbers[N_MAX];
-char is_palindrome[N_MAX][N_MAX];
+int map_palindrome[N_MAX][N_MAX];
+
+int is_palindrome(int s, int e);
 
 int main() {
     scanf("%d", &N);
-    for (int i = 0; i < N; i++) scanf("%d", numbers + i);
-
+    memset(map_palindrome, -1, sizeof map_palindrome);
     for (int i = 0; i < N; i++) {
-#ifndef NDEBUG
-        printf("Check from i %d\n", i);
-        printf("%d to %d is palindrome\n", i, i);
-#endif
-        is_palindrome[i][i] = 1;
-        if (i >= 1 && numbers[i - 1] == numbers[i]) {
-            // if even palindrome detected
-            // mark is_palindrome
-            int l = i - 1;
-            int r = i;
-            while (1) {
-#ifndef NDEBUG
-                printf("%d to %d is palindrome\n", l, r);
-#endif
-                is_palindrome[l--][r++] = 1;
-                if (!(l >= 0 && r < N)) break;
-                if (numbers[l] != numbers[r]) break;
-            }
-        }
-        if (i >= 2 && numbers[i - 2] == numbers[i]) {
-            // if odd palindrome detected
-            // mark is_palindrome
-            int l = i - 2;
-            int r = i;
-            while (1) {
-#ifndef NDEBUG
-                printf("%d to %d is palindrome\n", l, r);
-#endif
-                is_palindrome[l--][r++] = 1;
-                if (!(l >= 0 && r < N)) break;
-                if (numbers[l] != numbers[r]) break;
-            }
-        }
+        scanf("%d", numbers + i);
+        map_palindrome[i][i] = 1;
     }
     scanf("%d", &M);
     for (int i = 0; i < M; i++) {
         int s, e;
         scanf("%d %d", &s, &e);
-        printf("%d\n", is_palindrome[s - 1][e - 1]);
+        printf("%d\n", is_palindrome(s - 1, e - 1));
     }
+}
+
+int is_palindrome(int s, int e) {
+    // 1 2 -> even, center 1 2, sum is odd
+    // 1 3 -> odd, center 2, sum is even
+    // 2 6 -> odd, center 4, sum is even
+    // 1 4 -> even, center 2 3, sum is odd
+    if (map_palindrome[s][e] > -1) return map_palindrome[s][e];
+#ifndef NDEBUG
+    printf("Calculate %d to %d\n", s, e);
+#endif
+    int l, r;
+    if ((s + e) % 2 == 1) {
+        // even
+        l = (s + e) / 2;
+        r = l + 1;
+#ifndef NDEBUG
+        printf("Even, start from %d %d\n", l, r);
+#endif
+    } else {
+        // odd
+        l = (s + e) / 2 - 1;
+        r = l + 2;
+#ifndef NDEBUG
+        printf("Odd, start from %d %d\n", l, r);
+#endif
+    }
+    while (s <= l && r <= e) {
+        if (numbers[l] == numbers[r]) {
+            map_palindrome[l][r] = 1;
+#ifndef NDEBUG
+            printf("%d to %d is palindrome\n", l, r);
+#endif
+            l--;
+            r++;
+        } else {
+            map_palindrome[l][r] = 0;
+            map_palindrome[s][e] = 0;
+#ifndef NDEBUG
+            printf("%d to %d is not palindrome\n", l, r);
+            printf("%d to %d is not palindrome\n", s, e);
+#endif
+            return 0;
+        }
+    }
+    return 1;
 }
