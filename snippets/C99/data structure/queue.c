@@ -1,21 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct queue_node {
+typedef struct queue_node {
     int data;
     struct queue_node* prev;
-};
+} queue_node;
 
-struct queue {
-    struct queue_node* head;
-    struct queue_node* tail;
+typedef struct queue {
+    queue_node* head;
+    queue_node* tail;
     int size;
-};
+} queue;
 
-struct queue* construct_queue(int first_val) {
-    struct queue* new_queue = (struct queue*)malloc(sizeof(struct queue));
-    struct queue_node* first_node =
-        (struct queue_node*)malloc(sizeof(struct queue_node));
+queue* queue_(int first_val) {
+    queue* new_queue = (queue*)malloc(sizeof(queue));
+    queue_node* first_node = (queue_node*)malloc(sizeof(queue_node));
     first_node->data = first_val;
     first_node->prev = NULL;
 
@@ -25,9 +24,8 @@ struct queue* construct_queue(int first_val) {
     return new_queue;
 }
 
-int push_queue(int new_val, struct queue* target) {
-    struct queue_node* new_node =
-        (struct queue_node*)malloc(sizeof(struct queue_node));
+int push_queue(int new_val, queue* target) {
+    queue_node* new_node = (queue_node*)malloc(sizeof(queue_node));
 
     if (target->size == 0) {
         target->head = new_node;
@@ -43,19 +41,19 @@ int push_queue(int new_val, struct queue* target) {
     return 0;
 }
 
-int pop_queue(struct queue* target) {
+int pop_queue(queue* target) {
     if (target->size == 0) return -69420;
     int return_val = target->head->data;
-    struct queue_node* deleted = target->head;
+    queue_node* deleted = target->head;
     target->head = target->head->prev;
     free(deleted);
     target->size--;
     return return_val;
 }
 
-int print_queue(struct queue* target) {
+int print_queue(queue* target) {
     printf("Queue size: %d\n", target->size);
-    struct queue_node* cursor = target->head;
+    queue_node* cursor = target->head;
     while (cursor) {
         printf("%d ", cursor->data);
         cursor = cursor->prev;
@@ -65,7 +63,7 @@ int print_queue(struct queue* target) {
 }
 
 int main() {
-    struct queue* kueue = construct_queue(777);
+    queue* kueue = queue_(777);
 
     while (1) {
         printf("1: push | 2: pop <<<");
