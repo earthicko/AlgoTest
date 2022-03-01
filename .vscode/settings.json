@@ -5,6 +5,9 @@
         "fstream": "c",
         "istream": "c",
         "streambuf": "c",
-        "tuple": "c"
+        "tuple": "c",
+        "limits": "c",
+        "cmath": "c",
+        "cstdlib": "c"
     }
 }
