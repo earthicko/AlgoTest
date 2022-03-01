@@ -1,91 +1,90 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct queue_node {
-    int data;
-    struct queue_node* prev;
-} queue_node;
-
-typedef struct queue {
-    queue_node* head;
-    queue_node* tail;
+typedef struct Node {
+    int value;
+} Node;
+typedef struct Queue_Node {
+    Node data;
+    struct Queue_Node* prev;
+} Queue_Node;
+typedef struct Queue {
+    int (*push)(struct Queue*, Node);
+    Node (*pop)(struct Queue*);
+    Queue_Node* head;
+    Queue_Node* tail;
     int size;
-} queue;
+} Queue;
 
-queue* queue_(int first_val) {
-    queue* new_queue = (queue*)malloc(sizeof(queue));
-    queue_node* first_node = (queue_node*)malloc(sizeof(queue_node));
-    first_node->data = first_val;
-    first_node->prev = NULL;
-
-    new_queue->head = first_node;
-    new_queue->tail = first_node;
-    new_queue->size = 1;
-    return new_queue;
-}
-
-int push_queue(int new_val, queue* target) {
-    queue_node* new_node = (queue_node*)malloc(sizeof(queue_node));
-
-    if (target->size == 0) {
-        target->head = new_node;
-    } else {
-        target->tail->prev = new_node;
-    }
-    target->tail = new_node;
-    target->size++;
-
-    new_node->data = new_val;
-    new_node->prev = NULL;
-
-    return 0;
-}
-
-int pop_queue(queue* target) {
-    if (target->size == 0) return -69420;
-    int return_val = target->head->data;
-    queue_node* deleted = target->head;
-    target->head = target->head->prev;
-    free(deleted);
-    target->size--;
-    return return_val;
-}
-
-int print_queue(queue* target) {
-    printf("Queue size: %d\n", target->size);
-    queue_node* cursor = target->head;
-    while (cursor) {
-        printf("%d ", cursor->data);
-        cursor = cursor->prev;
-    }
-    printf("\n");
-    return 0;
-}
+Queue* Queue__init__();
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Node new_val);
+Node Queue_pop(Queue* this);
 
 int main() {
-    queue* kueue = queue_(777);
+    Queue* kueue = Queue__init__();
 
     while (1) {
         printf("1: push | 2: pop <<<");
         char choice = getchar();
 
-        int popped_val;
+        Node popped_val;
         switch (choice) {
             case '1':
                 printf("Input new value: ");
-                int new_val;
-                scanf("%d", &new_val);
-                push_queue(new_val, kueue);
+                Node new_val;
+                scanf("%d", &(new_val.value));
+                Queue_push(kueue, new_val);
                 break;
             case '2':
-                popped_val = pop_queue(kueue);
-                printf("Popped: %d\n", popped_val);
+                popped_val = Queue_pop(kueue);
+                printf("Popped: %d\n", popped_val.value);
                 break;
 
             default:
                 printf("Invalid input\n");
                 break;
         }
-        print_queue(kueue);
     }
+}
+
+Queue* Queue__init__() {
+    Queue* new_queue = (Queue*)malloc(sizeof(Queue));
+    new_queue->push = Queue_push;
+    new_queue->pop = Queue_pop;
+    new_queue->head = NULL;
+    new_queue->tail = NULL;
+    new_queue->size = 0;
+    return new_queue;
+}
+int Queue__del__(Queue* this) {
+    Queue_Node* cursor = this->head;
+    while (cursor != NULL) {
+        Queue_Node* temp = cursor;
+        cursor = cursor->prev;
+        free(temp);
+    }
+    free(this);
+}
+int Queue_push(Queue* this, Node new_val) {
+    Queue_Node* new_node = (Queue_Node*)malloc(sizeof(Queue_Node));
+    if (this->size == 0)
+        this->head = new_node;
+    else
+        this->tail->prev = new_node;
+    this->tail = new_node;
+    this->size++;
+    new_node->data = new_val;
+    new_node->prev = NULL;
+    return 0;
+}
+Node Queue_pop(Queue* this) {
+    assert(this->size > 0);
+    Node return_val = this->head->data;
+    Queue_Node* deleted = this->head;
+    this->head = this->head->prev;
+    free(deleted);
+    this->size--;
+    return return_val;
 }
