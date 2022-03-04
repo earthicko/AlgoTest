@@ -13,8 +13,8 @@ int numbers[N_MAX];
 int n, sum;
 int max = -NUM_MAX, min = NUM_MAX;
 
-int cmp_int(const void *a, const void *b);
-int cmp_occur(const void *a, const void *b);
+int cmp(const void *a, const void *b);
+int cmp_y(const void *a, const void *b);
 
 int main() {
     scanf("%d", &n);
@@ -35,12 +35,12 @@ int main() {
     if (avg >= 0 && avg - int_avg >= 0.5) int_avg++;
     if (avg < 0 && -avg + int_avg >= 0.5) int_avg--;
 
-    qsort((void *)numbers, n, sizeof(int), cmp_int);
+    qsort((void *)numbers, n, sizeof(int), cmp);
     int middle = numbers[n / 2];
 
     int nmemb = max - min + 1;
     int i_offset = min + 4000;
-    qsort((void *)(occur + i_offset), nmemb, sizeof(number), cmp_occur);
+    qsort((void *)(occur + i_offset), nmemb, sizeof(number), cmp_y);
 
     int max_occur_count = 1;
     int max_occur = occur[i_offset].count;
@@ -54,7 +54,7 @@ int main() {
         int *max_occured_vals = (int *)malloc(sizeof(int) * max_occur_count);
         for (int i = 0; i < max_occur_count; i++)
             max_occured_vals[i] = occur[i + i_offset].val;
-        qsort((void *)max_occured_vals, max_occur_count, sizeof(int), cmp_int);
+        qsort((void *)max_occured_vals, max_occur_count, sizeof(int), cmp);
         max_occured_val = max_occured_vals[max_occur_count - 2];
         free(max_occured_vals);
     }
@@ -66,13 +66,13 @@ int main() {
     return 0;
 }
 
-int cmp_int(const void *a, const void *b) {
+int cmp(const void *a, const void *b) {
     if (*(int *)a > *(int *)b) return -1;
     if (*(int *)a < *(int *)b) return 1;
     return 0;
 }
 
-int cmp_occur(const void *a, const void *b) {
+int cmp_y(const void *a, const void *b) {
     if (((number *)a)->count > ((number *)b)->count) return -1;
     if (((number *)a)->count < ((number *)b)->count) return 1;
     return 0;
