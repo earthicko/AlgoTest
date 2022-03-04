@@ -8,6 +8,12 @@
         "tuple": "c",
         "limits": "c",
         "cmath": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "type_traits": "c",
+        "stdlib.h": "c",
+        "typeinfo": "c",
+        "vector": "c",
+        "cerrno": "c",
+        "random": "c"
     }
 }
