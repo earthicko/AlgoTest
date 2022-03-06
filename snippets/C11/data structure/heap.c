@@ -129,9 +129,10 @@ Node Heap_pop(Heap* this) {
 }
 int Heap_realloc(Heap* this, int new_cap) {
     if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
     Node* temp = this->data;
     this->data = (Node*)malloc(sizeof(Node) * new_cap);
     for (int i = 0; i < this->n; i++) this->data[i] = temp[i];
-    free(temp);
+    if (temp != NULL) free(temp);
     return 0;
 }
