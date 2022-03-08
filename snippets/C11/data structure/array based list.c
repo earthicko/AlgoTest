@@ -43,9 +43,9 @@ int List__del__(List* del) {
 int List_resize(List* this, int cap_) {
     Item* temp = this->items;
     this->items = (Item*)malloc(sizeof(Item) * cap_);
-    int copy_max = (this->n < cap_) ? this->n : cap_;
-    for (int i = 0; i < copy_max; i++) this->items[i] = temp[i];
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
     free(temp);
+    this->cap = cap_;
     return 0;
 }
 int List_append(List* this, Item new) {
