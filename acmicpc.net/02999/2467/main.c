@@ -6,7 +6,6 @@ int N;
 
 int main() {
     scanf("%d", &N);
-    int pivot = -1;
     for (int i = 0; i < N; i++) {
         scanf("%d", &numbers[i]);
     }
