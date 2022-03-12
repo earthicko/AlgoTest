@@ -13,7 +13,7 @@ Queue* Queue__init__(int cap_);
 int Queue__del__(Queue* this);
 int Queue_push(Queue* this, Item item);
 Item Queue_pop(Queue* this);
-Item Queue_peek(Queue* this);
+Item Queue_peek(Queue* this, int i);
 int Queue_resize(Queue* this, int cap_);
 
 Queue* Queue__init__(int cap_) {
@@ -45,8 +45,8 @@ Item Queue_pop(Queue* this) {
     this->n--;
     return this->items[this->head];
 }
-Item Queue_peek(Queue* this) {
-    return this->items[(this->head + 1) % this->cap];
+Item Queue_peek(Queue* this, int i) {
+    return this->items[(this->head + 1 + (i % this->n)) % this->cap];
 }
 int Queue_resize(Queue* this, int cap_) {
     Item* linear = (Item*)malloc(sizeof(Item) * this->n);

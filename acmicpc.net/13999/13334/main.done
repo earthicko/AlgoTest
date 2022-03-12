@@ -1,0 +1,171 @@
+/*
+선분을 오른쪽 점 - 같을 경우 왼쪽 점 기준으로 정렬
+선분의 왼쪽 점 기준으로 정렬하는 우선순위 큐 준비
+길이가 D인 선분을 가정
+첫번째 선분부터 차례대로 꺼냄:
+    선분 길이가 D보다 클 시 다음 선분으로 넘어감
+    우선 순위 큐에 선분을 삽입
+    D의 오른쪽 점이 꺼낸 선분의 오른쪽 점과 일치하도록 이동함
+    우선순위 큐의 선두가 D의 왼쪽 점보다 오른쪽에 있는지 확인:
+        위 조건을 만족할 때까지 큐에서 빼냄
+    큐의 원소 수를 확인, 현재까지의 최대값보다 클 시 갱신
+*/
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 100000
+#define X_MIN -100000000
+#define X_MAX 100000000
+typedef struct Line {
+    int s, e;
+} Line;
+typedef Line Node;
+typedef struct Heap {
+    int (*cmp)(struct Heap*, int, int);
+    int n;  // index where last element is (0 when empty)
+    int cap;
+    Node* data;  // 1: root / 2~3: level 1 / 4~7: level 2...
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(struct Heap*, int, int));
+int Heap__del__(Heap* this);
+int Heap_min_compare_node(Heap* this, int idx_a, int idx_b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, Node new_val);
+Node Heap_pop(Heap* this);
+int Heap_realloc(Heap* this, int new_cap);
+int N, D;
+Line LINES[N_MAX];
+int cmp_line(const void* a, const void* b);
+int main() {
+    scanf("%d", &N);
+    for (int i = 0; i < N; i++) {
+        scanf("%d %d", &(LINES[i].s), &(LINES[i].e));
+        if (LINES[i].s > LINES[i].e) {
+            int temp = LINES[i].e;
+            LINES[i].e = LINES[i].s;
+            LINES[i].s = temp;
+        }
+    }
+    scanf("%d", &D);
+    qsort(LINES, N, sizeof(Line), cmp_line);
+    Heap* q = Heap__init__(N_MAX, Heap_min_compare_node);
+    int max_n = 0;
+    for (int i = 0; i < N; i++) {
+        if (LINES[i].e - LINES[i].s > D) continue;
+#ifndef ONLINE_JUDGE
+        printf("Push line %d s %d e %d\n", i, LINES[i].s, LINES[i].e);
+#endif
+        Heap_push(q, LINES[i]);
+        int d_e = LINES[i].e, d_s = d_e - D;
+        while (q->data[1].s < d_s) Heap_pop(q);
+        if (q->n > max_n) max_n = q->n;
+    }
+    printf("%d", max_n);
+    return 0;
+}
+int cmp_line(const void* a, const void* b) {
+    if (((Line*)a)->e > ((Line*)b)->e) return 1;
+    if (((Line*)a)->e < ((Line*)b)->e) return -1;
+    if (((Line*)a)->s > ((Line*)b)->s) return 1;
+    if (((Line*)a)->s < ((Line*)b)->s) return -1;
+    return 0;
+}
+Heap* Heap__init__(int cap_, int (*cmp_)(struct Heap*, int, int)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (Node*)malloc(sizeof(Node) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int Heap_min_compare_node(Heap* this, int a, int b) {
+    if (this->data[a].s > this->data[b].s) return 1;
+    if (this->data[a].s == this->data[b].s) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_idx) {
+    if (s_idx == 1) return 0;
+    int parent_idx = s_idx / 2;
+    if (this->cmp(this, parent_idx, s_idx) == 1) {
+        Node temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_idx];
+        this->data[s_idx] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* this, int s_idx) {
+    int l_idx = s_idx * 2;
+    int r_idx = s_idx * 2 + 1;
+    Node parent, l, r;
+    char swap = 0;
+    if (l_idx <= this->n) {
+        parent = this->data[s_idx];
+        l = this->data[l_idx];
+        if (r_idx <= this->n) {  // right child exists
+            r = this->data[r_idx];
+            if (this->cmp(this, s_idx, l_idx) == 1 &&
+                this->cmp(this, s_idx, r_idx) == 1) {
+                if (this->cmp(this, r_idx, l_idx) >= 0)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;  // swap with right child
+            } else if (this->cmp(this, s_idx, l_idx) == 1) {
+                swap = 1;  // swap with left child
+            } else if (this->cmp(this, s_idx, r_idx) == 1) {
+                swap = 2;  // swap with right child
+            }
+        } else {
+            if (this->cmp(this, s_idx, l_idx) == 1)
+                swap = 1;  // swap with left child
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            this->data[l_idx] = parent;
+            this->data[s_idx] = l;
+            Heap_sort_from_top(this, l_idx);
+            break;
+        case 2:  // swap with right child
+            this->data[r_idx] = parent;
+            this->data[s_idx] = r;
+            Heap_sort_from_top(this, r_idx);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+int Heap_push(Heap* this, Node new_val) {
+    if (this->n + 1 == this->cap) Heap_realloc(this, this->cap * 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+Node Heap_pop(Heap* this) {
+    Node top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    Node* temp = this->data;
+    this->data = (Node*)malloc(sizeof(Node) * new_cap);
+    for (int i = 0; i < this->n; i++) this->data[i] = temp[i];
+    if (temp != NULL) free(temp);
+    return 0;
+}
