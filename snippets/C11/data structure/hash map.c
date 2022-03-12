@@ -10,13 +10,11 @@ typedef struct HashTableEntry {
     const char* key;
     void* value;
 } HashTableEntry;
-
 typedef struct HashTable {
     HashTableEntry* entries;
     size_t capacity;
     size_t length;
 } HashTable;
-
 HashTable* HashTable__init__(void);
 void HashTable__del__(HashTable* table);
 void* HashTable_get(HashTable* table, const char* key);
@@ -30,7 +28,6 @@ HashTable* HashTable__init__(void) {
     table->entries = calloc(table->capacity, sizeof(HashTableEntry));
     return table;
 }
-
 void HashTable__del__(HashTable* table) {
     for (size_t i = 0; i < table->capacity; i++) {
         if (table->entries[i].key != NULL) free((void*)table->entries[i].key);
@@ -38,7 +35,6 @@ void HashTable__del__(HashTable* table) {
     free(table->entries);
     free(table);
 }
-
 static uint64_t gen_hash_key(const char* key) {
     uint64_t hash = FNV_OFFSET;
     for (const char* p = key; *p; p++) {
@@ -47,7 +43,6 @@ static uint64_t gen_hash_key(const char* key) {
     }
     return hash;
 }
-
 void* HashTable_get(HashTable* table, const char* key) {
     uint64_t hash = gen_hash_key(key);
     size_t index = (size_t)(hash & (uint64_t)(table->capacity - 1));
@@ -61,7 +56,6 @@ void* HashTable_get(HashTable* table, const char* key) {
     }
     return NULL;
 }
-
 static const char* HashTable_set_entry(HashTableEntry* entries, size_t capacity,
                                        const char* key, void* value,
                                        size_t* plength) {
@@ -84,7 +78,6 @@ static const char* HashTable_set_entry(HashTableEntry* entries, size_t capacity,
     entries[index].value = value;
     return key;
 }
-
 static int HashTable_expand(HashTable* table) {
     size_t new_capacity = table->capacity * 2;
     HashTableEntry* new_entries = calloc(new_capacity, sizeof(HashTableEntry));
@@ -99,7 +92,6 @@ static int HashTable_expand(HashTable* table) {
     table->capacity = new_capacity;
     return 1;
 }
-
 const char* HashTable_set(HashTable* table, const char* key, void* value) {
     if (table->length >= table->capacity / 2) HashTable_expand(table);
     return HashTable_set_entry(table->entries, table->capacity, key, value,
