@@ -43,6 +43,7 @@
 			"command": "gcc",
 			"args": [
 				"${file}",
+				"-lm",
 				"-g",
 				"-o",
 				"${fileDirname}/${fileBasenameNoExtension}"

@@ -14,6 +14,25 @@
         "typeinfo": "c",
         "vector": "c",
         "cerrno": "c",
-        "random": "c"
+        "random": "c",
+        "string": "c",
+        "string_view": "c",
+        "array": "c",
+        "deque": "c",
+        "bit": "c",
+        "stdio.h": "c",
+        "optional": "c",
+        "algorithm": "c",
+        "numeric": "c",
+        "iosfwd": "c",
+        "stdexcept": "c",
+        "exception": "c",
+        "memory_resource": "c",
+        "iostream": "c",
+        "new": "c",
+        "ostream": "c",
+        "sstream": "c",
+        "utility": "c",
+        "math.h": "c"
     }
 }
