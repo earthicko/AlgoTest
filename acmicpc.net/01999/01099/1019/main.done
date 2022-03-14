@@ -1,0 +1,28 @@
+#include <stdio.h>
+int N;
+int NUM_DIGITS[10];
+int count_digits_once(int n, int pow_10);
+int count_all_digits(int s, int e, int pow_10);
+int main() {
+    scanf("%d", &N);
+    count_all_digits(1, N, 1);
+    for (int i = 0; i < 10; i++) printf("%d ", NUM_DIGITS[i]);
+    return 0;
+}
+int count_digits_once(int n, int pow_10) {
+    while (n > 0) {
+        NUM_DIGITS[n % 10] += pow_10;
+        n /= 10;
+    }
+    return 0;
+}
+int count_all_digits(int s, int e, int pow_10) {
+    while (s % 10 != 0 && s <= e) count_digits_once(s++, pow_10);
+    if (s > e) return -1;
+    while (e % 10 != 9 && s <= e) count_digits_once(e--, pow_10);
+    if (s > e) return -1;
+    int partial_result = e / 10 - s / 10 + 1;
+    for (int i = 0; i < 10; i++) NUM_DIGITS[i] += partial_result * pow_10;
+    count_all_digits(s / 10, e / 10, pow_10 * 10);
+    return 0;
+}

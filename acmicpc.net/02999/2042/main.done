@@ -1,0 +1,59 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 1000000
+typedef long long ll;
+ll *tree;
+ll numbers[N_MAX];
+
+ll fill_tree(int node_i, int s, int e);
+int update_tree(int node_i, int s, int e, int num_i, ll diff);
+ll get_sum(int node_i, int s, int e, int scope_s, int scope_r);
+
+int main() {
+    int N, M, K;
+    scanf("%d %d %d", &N, &M, &K);
+    int h_tree = ceil(log2(N));
+    tree = malloc(sizeof(ll) * (1 << (h_tree + 1)));
+    for (int n = 0; n < N; n++) scanf("%lld", &numbers[n]);
+    fill_tree(1, 0, N - 1);
+
+    for (int i = 0; i < M + K; i++) {
+        int a, b;
+        ll c;
+        scanf("%d %d %lld", &a, &b, &c);
+        if (a == 1) {
+            ll diff = c - numbers[b - 1];
+            numbers[b - 1] = c;
+            update_tree(1, 0, N - 1, b - 1, diff);
+        } else if (a == 2) {
+            printf("%lld\n", get_sum(1, 0, N - 1, b - 1, c - 1));
+        }
+    }
+    return 0;
+}
+
+ll fill_tree(int node_i, int s, int e) {
+    if (s == e) return tree[node_i] = numbers[s];
+    int mid = (s + e) / 2;
+    tree[node_i] =
+        fill_tree(2 * node_i, s, mid) + fill_tree(2 * node_i + 1, mid + 1, e);
+    return tree[node_i];
+}
+
+int update_tree(int node_i, int s, int e, int num_i, ll diff) {
+    if (num_i < s || num_i > e) return 0;
+    tree[node_i] += diff;
+    if (s == e) return 0;
+    int mid = (s + e) / 2;
+    update_tree(node_i * 2, s, mid, num_i, diff);
+    update_tree(node_i * 2 + 1, mid + 1, e, num_i, diff);
+}
+
+ll get_sum(int node_i, int s, int e, int scope_s, int scope_r) {
+    if (scope_s > e || scope_r < s) return 0;
+    if (scope_s <= s && e <= scope_r) return tree[node_i];
+    int mid = (s + e) / 2;
+    return get_sum(node_i * 2, s, mid, scope_s, scope_r) +
+           get_sum(node_i * 2 + 1, mid + 1, e, scope_s, scope_r);
+}

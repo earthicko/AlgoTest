@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define L_MAX 16
+#define N_MAX 1000
+#define K_MAX 15
+
+typedef struct Node {
+    char name[L_MAX];
+    int cap, n;
+    struct Node** leafs;
+} Node;
+int N;
+int cmp_node(const void* a, const void* b);
+Node* Node__init__(int cap_, const char* name_);
+int Node_append(Node* this, const char* name);
+int Node_resize(Node* this, int cap_);
+int add_node(Node* root, int k);
+int do_dfs(Node* root, int lv);
+int main() {
+    Node* root = Node__init__(K_MAX, "root");
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        int k;
+        scanf("%d", &k);
+        add_node(root, k);
+    }
+    do_dfs(root, 0);
+    return 0;
+}
+int add_node(Node* root, int k) {
+    if (k == 0) {
+#ifndef ONLINE_JUDGE
+        printf("K==0, abort\n");
+#endif
+        return 0;
+    }
+#ifndef ONLINE_JUDGE
+    printf("K==%d\n", k);
+#endif
+    char new_name[L_MAX];
+    scanf("%s", new_name);
+#ifndef ONLINE_JUDGE
+    printf("Got new name %s\n", new_name);
+#endif
+    Node* next_node = NULL;
+    for (int i = 0; i < root->n; i++) {
+        if (strcmp(root->leafs[i]->name, new_name) == 0) {
+#ifndef ONLINE_JUDGE
+            printf("Found existing leaf %d\n", i);
+#endif
+            next_node = root->leafs[i];
+            break;
+        }
+    }
+    if (next_node == NULL) {
+        Node_append(root, new_name);
+        next_node = root->leafs[root->n - 1];
+#ifndef ONLINE_JUDGE
+        printf("No leaf found, appended leaf count %d\n", root->n);
+#endif
+    }
+    add_node(next_node, k - 1);
+    return 0;
+}
+int do_dfs(Node* root, int lv) {
+    if (lv > 0) {
+        for (int i = 0; i < lv - 1; i++) printf("--");
+        printf("%s\n", root->name);
+    }
+    qsort(root->leafs, root->n, sizeof(Node*), cmp_node);
+    for (int i = 0; i < root->n; i++) do_dfs(root->leafs[i], lv + 1);
+    return 0;
+}
+int cmp_node(const void* a, const void* b) {
+    return strcmp((*(Node**)a)->name, (*(Node**)b)->name);
+}
+Node* Node__init__(int cap_, const char* name_) {
+    Node* this = malloc(sizeof(Node));
+    this->cap = cap_;
+    this->n = 0;
+    strcpy(this->name, name_);
+    this->leafs = malloc(sizeof(Node*) * cap_);
+    return this;
+}
+int Node_append(Node* this, const char* name) {
+    if (this->cap == this->n) Node_resize(this, this->cap * 2);
+    this->leafs[this->n] = Node__init__(K_MAX, name);
+    this->n++;
+    return 0;
+}
+int Node_resize(Node* this, int cap_) {
+    this->leafs = realloc(this->leafs, sizeof(Node*) * cap_);
+    this->cap = cap_;
+    return 0;
+}
