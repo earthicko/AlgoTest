@@ -1,0 +1,94 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define get_min(a, b)           \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a < _b ? _a : _b;      \
+    })
+#define get_max(a, b)           \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a > _b ? _a : _b;      \
+    })
+#define N_MAX 1000000
+typedef struct pair {
+    int min, max;
+} pair;
+typedef struct node {
+    int s, e;
+    pair val;
+} node;
+node *tree;
+int numbers[N_MAX];
+
+int fill_tree(int node_i, int s, int e);
+int update_tree(int node_i, int new_val);
+pair get_minmax(int node_i, int scope_s, int scope_e);
+
+int main() {
+    int N, M;
+    scanf("%d %d", &N, &M);
+    int h_tree = ceil(log2(N));
+    tree = malloc(sizeof(node) * (1 << (h_tree + 1)));
+    for (int n = 0; n < N; n++) scanf("%d", &numbers[n]);
+    fill_tree(1, 0, N);
+    for (int m = 0; m < M; m++) {
+        int a, b;
+        scanf("%d %d", &a, &b);
+        pair minmax = get_minmax(1, a - 1, b);
+        printf("%d %d\n", minmax.min, minmax.max);
+    }
+    return 0;
+}
+
+int fill_tree(int node_i, int s, int e) {
+    tree[node_i].s = s;
+    tree[node_i].e = e;
+    if (s + 1 == e) {
+        tree[node_i].val.min = numbers[s];
+        tree[node_i].val.max = numbers[s];
+        return 0;
+    }
+    int mid = (s + e) / 2;
+    fill_tree(2 * node_i, s, mid);
+    fill_tree(2 * node_i + 1, mid, e);
+    tree[node_i].val.min =
+        get_min(tree[node_i * 2].val.min, tree[node_i * 2 + 1].val.min);
+    tree[node_i].val.max =
+        get_max(tree[node_i * 2].val.max, tree[node_i * 2 + 1].val.max);
+    return 0;
+}
+
+// int update_tree_(int node_i, int num_i, int new_val) {
+//     if (!(num_i >= tree[node_i].s && num_i < tree[node_i].e)) return -1;
+//     tree[node_i].val.min = get_min(tree[node_i].val.min, new_val);
+//     tree[node_i].val.max = get_max(tree[node_i].val.max, new_val);
+//     if (tree[node_i].s + 1 == tree[node_i].e) return 0;
+//     update_tree_(node_i * 2, num_i, new_val);
+//     update_tree_(node_i * 2 + 1, num_i, new_val);
+//     return 0;
+// }
+
+// int update_tree(int node_i, int new_val) {
+//     numbers[node_i] = new_val;
+//     update_tree_(1, node_i, new_val);
+//     return 0;
+// }
+
+pair get_minmax(int node_i, int scope_s, int scope_e) {
+    if (tree[node_i].e <= scope_s || scope_e <= tree[node_i].s) {
+        pair impossible = {__INT32_MAX__, -__INT32_MAX__};
+        return impossible;
+    }
+    if (scope_s <= tree[node_i].s && tree[node_i].e <= scope_e)
+        return tree[node_i].val;
+    pair local_result;
+    pair left_result = get_minmax(node_i * 2, scope_s, scope_e);
+    pair right_result = get_minmax(node_i * 2 + 1, scope_s, scope_e);
+    local_result.min = get_min(left_result.min, right_result.min);
+    local_result.max = get_max(left_result.max, right_result.max);
+    return local_result;
+}
