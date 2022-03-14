@@ -1,0 +1,87 @@
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+typedef long long ll;
+typedef long long Item;
+typedef struct List {
+    int n, cap;
+    Item* items;
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+ll fast_pow(ll base, ll pow);
+int is_prime(ll num);
+int main() {
+    ll N, M, N_BAK;
+    scanf("%lld", &N);
+    M = N;
+    N_BAK = N;
+    List* primes = List__init__(10000);
+    ll limit_prime = sqrt(N);
+    for (ll p = 2; p <= limit_prime; p++) {
+        if (N % p == 0 && is_prime(p)) List_append(primes, p);
+        ll N_p = N / p;
+        if (N % N_p == 0 && is_prime(N_p) && N_p != p) List_append(primes, N_p);
+    }
+    for (int i = 0; i < primes->n; i++) {
+        int k;
+        for (k = 1; k <= 40; k++) {
+            ll p_k = fast_pow(primes->items[i], k);
+            if (N % p_k != 0) break;
+        }
+        assert(k != 1);
+        k--;
+        N /= fast_pow(primes->items[i], k);
+        M /= primes->items[i];
+        M *= (primes->items[i] - 1);
+    }
+    if (N_BAK == M)
+        printf("%lld\n", M - 1);
+    else
+        printf("%lld\n", M);
+    return 0;
+}
+ll fast_pow(ll base, ll pow) {
+    ll x = 1;
+    while (pow) {
+        if (pow & 1) x *= base;
+        base *= base;
+        pow /= 2;
+    }
+    return x;
+}
+int is_prime(ll num) {
+    ll r = sqrt(num);
+    for (ll i = 2; i <= r; i++)
+        if (num % i == 0) return 0;
+    return 1;
+}
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}

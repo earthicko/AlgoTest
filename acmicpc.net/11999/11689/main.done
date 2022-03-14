@@ -1,0 +1,18 @@
+#include <stdio.h>
+
+typedef long long ll;
+
+int main() {
+    ll N, PHI;
+    scanf("%lld", &N);
+    PHI = N;
+    for (ll p = 2; p * p <= N; p++) {
+        if (N % p == 0) {
+            PHI = PHI - PHI / p;
+            while (N % p == 0) N /= p;
+        }
+    }
+    if (N > 1) PHI = PHI - PHI / N;
+    printf("%lld\n", PHI);
+    return 0;
+}

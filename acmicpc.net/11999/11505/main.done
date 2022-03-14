@@ -1,0 +1,73 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 1000000
+#define MOD 1000000007
+typedef long long ll;
+typedef struct node {
+    int s, e;
+    ll val;
+} node;
+node *tree;
+int number_i[N_MAX];
+ll numbers[N_MAX];
+int N, M, K;
+int fill_tree(int node_i, int s, int e);
+int alter_tree(int n, ll new_n);
+ll get_sum(int s, int e, int node_i);
+int main() {
+    scanf("%d %d %d", &N, &M, &K);
+    int tree_height = ceil(log2(N));
+    int tree_size = (1 << (tree_height + 1));
+    tree = malloc(sizeof(node) * tree_size);
+    for (int i = 0; i < N; i++) scanf("%lld", &numbers[i]);
+    fill_tree(1, 0, N);
+    for (int k = 0; k < K + M; k++) {
+        int command, b;
+        ll c;
+        scanf("%d %d %lld", &command, &b, &c);
+        if (command == 1)
+            alter_tree(b - 1, c);
+        else if (command == 2)
+            printf("%lld\n", get_sum(b - 1, c, 1));
+    }
+    return 0;
+}
+int fill_tree(int node_i, int s, int e) {
+    tree[node_i].s = s;
+    tree[node_i].e = e;
+    if (e - s == 1) {
+        tree[node_i].val = numbers[s];
+        number_i[s] = node_i;
+        return 0;
+    }
+    int mid = (s + e) / 2;
+    fill_tree(node_i * 2, s, mid);
+    fill_tree(node_i * 2 + 1, mid, e);
+    tree[node_i].val = (tree[node_i * 2].val * tree[node_i * 2 + 1].val) % MOD;
+    return 0;
+}
+int alter_tree_recursive(int node_i, ll new_val) {
+    if (node_i == 0) return 0;
+    if (tree[node_i].s + 1 == tree[node_i].e) {
+        tree[node_i].val = new_val;
+    } else {
+        tree[node_i].val =
+            (tree[node_i * 2].val * tree[node_i * 2 + 1].val) % MOD;
+    }
+    alter_tree_recursive(node_i / 2, new_val);
+    return 0;
+}
+int alter_tree(int n, ll new_n) {
+    alter_tree_recursive(number_i[n], new_n);
+    return 0;
+}
+ll get_sum(int s, int e, int node_i) {
+    if (e <= tree[node_i].s || tree[node_i].e <= s) {
+        return 1;
+    }
+    if (s <= tree[node_i].s && tree[node_i].e <= e) {
+        return tree[node_i].val;
+    }
+    return (get_sum(s, e, node_i * 2) * get_sum(s, e, node_i * 2 + 1)) % MOD;
+}
