@@ -1,0 +1,42 @@
+#include <stdio.h>
+#define N_MAX 4000001
+typedef long long ll;
+const ll MOD = 1000000007;
+int M;
+ll N, K;
+ll FAC_MOD[N_MAX];
+ll get_exp(ll base, ll pow);
+ll get_ncr_mod(ll n, ll r);
+int main() {
+    scanf("%d", &M);
+    FAC_MOD[0] = 1;
+    for (int i = 1; i < N_MAX; i++) {
+        FAC_MOD[i] = (FAC_MOD[i - 1] * i) % MOD;
+    }
+    for (int m = 0; m < M; m++) {
+        scanf("%lld %lld", &N, &K);
+        printf("%lld\n", get_ncr_mod(N, K));
+    }
+    return 0;
+}
+ll get_ncr_mod(ll n, ll r) {
+    // calc (n! / r! * (n - r)!) % P
+    // calc (n! * (r! * (n - r)!)^P-2) % P
+    // calc (n! % P * (r! % P * (n - r)! % P)^P-2 % P) % P
+    //       --n---    ----------X----------
+    //                 ----------------Y-------------
+    ll n_fac = FAC_MOD[n];
+    ll x = (FAC_MOD[r] * FAC_MOD[n - r]) % MOD;
+    ll y = get_exp(x, MOD - 2);
+    ll result = (n_fac * y) % MOD;
+    return result;
+}
+ll get_exp(ll base, ll pow) {
+    ll result = 1;
+    while (pow != 0) {
+        if (pow % 2 == 1) result = (result * base) % MOD;
+        base = (base * base) % MOD;
+        pow /= 2;
+    }
+    return result;
+}

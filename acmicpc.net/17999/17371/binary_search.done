@@ -1,0 +1,97 @@
+#include <math.h>
+#include <stdio.h>
+const double E = 10e-12;
+#define min(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a < _b ? _a : _b;      \
+    })
+#define max(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a > _b ? _a : _b;      \
+    })
+#define N_MAX 1000
+int N, X_MAX, X_MIN, Y_MAX, Y_MIN;
+int coords[N_MAX][2];
+double X_FIT, Y_FIT;
+
+int get_d_avg(double x_s, double x_e, double y_s, double y_e);
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        scanf("%d %d", &coords[n][0], &coords[n][1]);
+        X_MAX = max(X_MAX, coords[n][0]);
+        X_MIN = min(X_MIN, coords[n][0]);
+        Y_MAX = max(Y_MAX, coords[n][1]);
+        Y_MIN = min(Y_MIN, coords[n][1]);
+    }
+    get_d_avg(X_MIN, X_MAX, Y_MIN, Y_MAX);
+    printf("%.12f %.12f", X_FIT, Y_FIT);
+    return 0;
+}
+double get_max_d(double x, double y) {
+    double max_d = 0;
+    for (int i = 0; i < N; i++) {
+        double dx = coords[i][0] - x;
+        double dy = coords[i][1] - y;
+        double d = sqrt(dx * dx + dy * dy);
+        max_d = max(max_d, d);
+    }
+    return max_d;
+}
+double get_min_d(double x, double y) {
+    double min_d = __DBL_MAX__;
+    for (int i = 0; i < N; i++) {
+        double dx = coords[i][0] - x;
+        double dy = coords[i][1] - y;
+        double d = sqrt(dx * dx + dy * dy);
+        min_d = min(min_d, d);
+    }
+    return min_d;
+}
+int get_d_avg(double x_s, double x_e, double y_s, double y_e) {
+    double scope_x = x_e - x_s;
+    double scope_y = y_e - y_s;
+    if (scope_x < E && scope_y < E) {
+#ifndef ONLINE_JUDGE
+        printf("Scope is narrower than error, finish\n");
+#endif
+        X_FIT = x_s;
+        Y_FIT = y_s;
+        return 0;
+    }
+#ifndef ONLINE_JUDGE
+    printf("Search from x(%f, %f) y(%f, %f)\n", x_s, x_e, y_s, y_e);
+#endif
+    double x[3] = {x_s, (x_s + x_e) / 2, x_e};
+    double y[3] = {y_s, (y_s + y_e) / 2, y_e};
+    int min_x_i, min_y_i;
+    double min_d_avg = __DBL_MAX__;
+    for (int x_i = 0; x_i < 3; x_i++) {
+        for (int y_i = 0; y_i < 3; y_i++) {
+            double min_d = get_min_d(x[x_i], y[y_i]);
+            double max_d = get_max_d(x[x_i], y[y_i]);
+            double avg = (min_d + max_d) / 2;
+#ifndef ONLINE_JUDGE
+            printf("  AVG %f from [%d][%d] (%f, %f)\n", avg, x_i, y_i, x[x_i],
+                   y[y_i]);
+#endif
+            if (avg < min_d_avg) {
+                min_d_avg = avg;
+                min_x_i = x_i;
+                min_y_i = y_i;
+            }
+        }
+    }
+#ifndef ONLINE_JUDGE
+    printf("Lowest AVG %f was from [%d][%d] (%f, %f)\n", min_d_avg, min_x_i,
+           min_y_i, x[min_x_i], y[min_y_i]);
+#endif
+    get_d_avg(x[min_x_i] - scope_x / 4, x[min_x_i] + scope_x / 4,
+              y[min_y_i] - scope_y / 4, y[min_y_i] + scope_y / 4);
+    return 0;
+}

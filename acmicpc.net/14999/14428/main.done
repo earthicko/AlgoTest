@@ -1,0 +1,89 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 100000
+
+int N, A[N_MAX], M;
+int *TREE;
+int build_tree();
+int update_tree(int num_i, int new_val);
+int get_tree(int s, int e);
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) scanf("%d", &A[n]);
+    build_tree();
+    scanf("%d", &M);
+    for (int m = 0; m < M; m++) {
+        int a, b, c;
+        scanf("%d %d %d", &a, &b, &c);
+        switch (a) {
+            case 1:
+                update_tree(b - 1, c);
+                break;
+            case 2:
+                printf("%d\n", get_tree(b - 1, c) + 1);
+                break;
+        }
+    }
+    return 0;
+}
+int build_tree_(int node_i, int s, int e) {
+    if (s + 1 == e) {
+        TREE[node_i] = s;
+        return 0;
+    }
+    int mid = (s + e) / 2;
+    build_tree_(node_i * 2, s, mid);
+    build_tree_(node_i * 2 + 1, mid, e);
+    if (A[TREE[node_i * 2]] <= A[TREE[node_i * 2 + 1]])
+        TREE[node_i] = TREE[node_i * 2];
+    else
+        TREE[node_i] = TREE[node_i * 2 + 1];
+    return 0;
+}
+int build_tree() {
+    int tree_h = ceil(log2(N));
+    TREE = malloc(sizeof(int) * (1 << tree_h + 1));
+    build_tree_(1, 0, N);
+    return 0;
+}
+int update_tree_(int node_i, int s, int e, int num_i) {
+    if (num_i < s || e <= num_i) return -1;
+    if (s + 1 == e) return 0;
+    int mid = (s + e) / 2;
+    update_tree_(node_i * 2, s, mid, num_i);
+    update_tree_(node_i * 2 + 1, mid, e, num_i);
+    if (A[TREE[node_i * 2]] <= A[TREE[node_i * 2 + 1]])
+        TREE[node_i] = TREE[node_i * 2];
+    else
+        TREE[node_i] = TREE[node_i * 2 + 1];
+    return 0;
+}
+int update_tree(int num_i, int new_val) {
+    A[num_i] = new_val;
+    update_tree_(1, 0, N, num_i);
+    return 0;
+}
+int get_tree_(int node_i, int s, int e, int target_s, int target_e) {
+    if (target_e <= s || e <= target_s) return -1;
+    if (target_s <= s && e <= target_e) return TREE[node_i];
+    int mid = (s + e) / 2;
+    int left = get_tree_(node_i * 2, s, mid, target_s, target_e);
+    int right = get_tree_(node_i * 2 + 1, mid, e, target_s, target_e);
+    if (left == -1 && right == -1)
+        return -1;
+    else if (left == -1)
+        return right;
+    else if (right == -1)
+        return left;
+    int left_val = A[left];
+    int right_val = A[right];
+    if (left_val <= right_val)
+        return left;
+    else
+        return right;
+}
+int get_tree(int s, int e) {
+    int result = get_tree_(1, 0, N, s, e);
+    return result;
+}

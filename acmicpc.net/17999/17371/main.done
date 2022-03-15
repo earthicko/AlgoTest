@@ -1,0 +1,39 @@
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define max(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a > _b ? _a : _b;      \
+    })
+#define N_MAX 1000
+int N;
+int coords[N_MAX][2];
+int MAX_D[N_MAX];
+int cmp(const void* a, const void* b);
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        scanf("%d %d", &coords[n][0], &coords[n][1]);
+    }
+    for (int n = 0; n < N; n++) {
+        for (int m = n + 1; m < N; m++) {
+            int dx = coords[n][0] - coords[m][0];
+            int dy = coords[n][1] - coords[m][1];
+            int d_sq = dx * dx + dy * dy;
+            MAX_D[n] = max(MAX_D[n], d_sq);
+            MAX_D[m] = max(MAX_D[m], d_sq);
+        }
+    }
+    int min_d = __INT32_MAX__;
+    int min_i;
+    for (int n = 0; n < N; n++) {
+        if (MAX_D[n] < min_d) {
+            min_d = MAX_D[n];
+            min_i = n;
+        }
+    }
+    printf("%d %d", coords[min_i][0], coords[min_i][1]);
+    return 0;
+}

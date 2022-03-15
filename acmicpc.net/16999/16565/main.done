@@ -1,0 +1,34 @@
+#include <stdio.h>
+#define ONLINE_JUDGE
+const int P = 10007;
+int N;
+int ncr_mod[53][53];
+int main() {
+    for (int n = 0; n <= 52; n++) {
+        for (int r = 0; r <= n / 2; r++) {
+            if (r == 0)
+                ncr_mod[n][r] = 1;
+            else
+                ncr_mod[n][r] = (ncr_mod[n - 1][r - 1] + ncr_mod[n - 1][r]) % P;
+            ncr_mod[n][n - r] = ncr_mod[n][r];
+        }
+    }
+    scanf("%d", &N);
+    int possible_pairs;
+    if (0 <= N && N < 4) {
+        printf("0\n");
+        return 0;
+    }
+    possible_pairs = N / 4;
+    int ans = 0;
+    for (int i = 1; i <= possible_pairs; i++) {
+        // 13개 무늬 중 i개를 뽑는다 -> 52장 카드에서 4*i개를 뽑는다
+        // 52-4*i개 카드 중 N-4*i개를 뽑는다
+        int local_sum = (ncr_mod[13][i] * ncr_mod[52 - 4 * i][N - 4 * i]) % P;
+        if (i % 2 == 0) local_sum = -local_sum;
+        ans = (ans + local_sum) % P;
+        while (ans < 0) ans += P;
+    }
+    printf("%d\n", ans);
+    return 0;
+}

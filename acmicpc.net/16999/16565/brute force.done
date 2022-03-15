@@ -1,0 +1,70 @@
+#include <stdio.h>
+#define N_ROWS 4
+#define ONLINE_JUDGE
+const int P = 10007;
+const int K = 13;
+const int N_CARDS = K * N_ROWS;
+int FULL;
+typedef struct cards {
+    int rows[N_ROWS];
+    int picked_n;
+} cards;
+int N, COUNT;
+int do_dfs(int pick_n, cards card, int idx);
+int main() {
+    scanf("%d", &N);
+    cards empty;
+    for (int i = 0; i < K; i++) FULL |= (1 << i);
+    for (int i = 0; i < N_ROWS; i++) empty.rows[i] = 0;
+    empty.picked_n = N_CARDS - N;
+    do_dfs(N_CARDS - N, empty, 0);
+    printf("%d\n", COUNT);
+    return 0;
+}
+int do_dfs(int pick_n, cards card, int idx) {
+#ifndef ONLINE_JUDGE
+    printf("At idx %d, %d more cards to pick\n", idx, pick_n);
+    for (int i = 0; i < N_ROWS; i++) {
+        for (int j = K - 1; j >= 0; j--) {
+            int bit = (card.rows[i] & (1 << j)) ? 1 : 0;
+            printf("%d ", bit);
+        }
+        printf("\n");
+    }
+#endif
+    int mask = 0;
+    for (int i = 0; i < N_ROWS; i++) mask |= card.rows[i];
+    if (mask == FULL) {
+#ifndef ONLINE_JUDGE
+        printf("Cannot make 4, abort\n");
+#endif
+        return -1;
+    }
+    if (pick_n == 0 && idx <= N_CARDS) {
+        COUNT++;
+        if (COUNT == P) COUNT = 0;
+#ifndef ONLINE_JUDGE
+        printf("Picked all cards, count = %d\n", COUNT);
+#endif
+        // printf("Picked all cards, count = %d\n", COUNT);
+        return 0;
+    }
+    if (N_CARDS - idx < pick_n) {
+#ifndef ONLINE_JUDGE
+        printf("No more possibility, abort\n");
+#endif
+        return -2;
+    }
+    if (idx == N_CARDS) {
+#ifndef ONLINE_JUDGE
+        printf("End of cards, abort\n");
+#endif
+        return -2;
+    }
+    int row_n = idx / K;
+    card.rows[row_n] |= (1 << idx % K);
+    do_dfs(pick_n - 1, card, idx + 1);
+    card.rows[row_n] &= ~(1 << idx % K);
+    do_dfs(pick_n, card, idx + 1);
+    return 0;
+}
