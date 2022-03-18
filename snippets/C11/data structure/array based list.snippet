@@ -49,13 +49,13 @@ int List_resize(List* this, int cap_) {
     return 0;
 }
 int List_append(List* this, Item new) {
-    if (this->n == this->cap) this->resize(this, this->cap * 2);
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
     this->items[this->n] = new;
     this->n++;
     return 0;
 }
 int List_insert(List* this, Item new, int idx) {
-    if (this->n == this->cap) this->resize(this, this->cap * 2);
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
     idx = idx % this->n;
     for (int i = this->n - 1; i >= idx; i--)
         this->items[i + 1] = this->items[i];

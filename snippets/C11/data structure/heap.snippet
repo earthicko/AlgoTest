@@ -6,9 +6,9 @@ typedef struct Heap {
     int (*cmp)(struct Heap*, int, int);
     int (*push)(struct Heap*, Node);
     Node (*pop)(struct Heap*);
-    int n;  // index where last element is (0 when empty)
+    int n;
     int cap;
-    Node* data;  // 1: root / 2~3: level 1 / 4~7: level 2...
+    Node* data;
 } Heap;
 
 Heap* Heap__init__(int cap_, int (*cmp_)(struct Heap*, int, int));
