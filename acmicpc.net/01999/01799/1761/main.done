@@ -1,0 +1,119 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 40001
+#define E_MAX 17
+
+typedef struct Item {
+    int e, d;
+} Item;
+typedef struct List {
+    int n, cap;
+    Item* items;
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+
+int N, M;
+List* TREE[N_MAX];
+int PARENT[N_MAX][E_MAX];
+int DEPTH[N_MAX];
+int D_TO_ROOT[N_MAX];
+int IDX_ROOT;
+
+int build_tree(int prev, int here, int depth);
+int build_parent_table();
+int find_lca(int a, int b);
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 1; n <= N; n++) TREE[n] = List__init__(3);
+
+    for (int n = 0; n < N - 1; n++) {
+        int s, e, d;
+        scanf("%d %d %d", &s, &e, &d);
+        Item s_e = {e, d};
+        Item e_s = {s, d};
+        List_append(TREE[s], s_e);
+        List_append(TREE[e], e_s);
+        if (n == 0) IDX_ROOT = s;
+    }
+    build_tree(0, IDX_ROOT, 0);
+    build_parent_table();
+
+    scanf("%d", &M);
+    for (int i = 0; i < M; i++) {
+        int s, e;
+        scanf("%d %d", &s, &e);
+        int common_root = find_lca(s, e);
+        int dist = D_TO_ROOT[s] + D_TO_ROOT[e] - 2 * D_TO_ROOT[common_root];
+        printf("%d\n", dist);
+    }
+    return 0;
+}
+
+int build_tree(int prev, int here, int depth) {
+    DEPTH[here] = depth;
+    for (int i = 0; i < TREE[here]->n; i++) {
+        int new = TREE[here]->items[i].e;
+        if (new == prev) continue;
+        PARENT[new][0] = here;
+        D_TO_ROOT[new] = D_TO_ROOT[here] + TREE[here]->items[i].d;
+        build_tree(here, new, depth + 1);
+    }
+    return 0;
+}
+
+int build_parent_table() {
+    for (int e = 1; e < E_MAX; e++)
+        for (int i = 1; i <= N; i++)
+            PARENT[i][e] = PARENT[PARENT[i][e - 1]][e - 1];
+    return 0;
+}
+
+int find_lca(int a, int b) {
+    if (DEPTH[a] > DEPTH[b]) {
+        int temp = a;
+        a = b;
+        b = temp;
+    }
+    for (int e = E_MAX - 1; e >= 0; e--) {
+        int jumpable_diff = 1 << e;
+        if (DEPTH[b] - DEPTH[a] >= jumpable_diff) b = PARENT[b][e];
+    }
+    if (a == b) return a;
+    for (int e = E_MAX - 1; e >= 0; e--) {
+        if (PARENT[a][e] == PARENT[b][e]) continue;
+        a = PARENT[a][e];
+        b = PARENT[b][e];
+    }
+    return PARENT[a][0];
+}
+
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}

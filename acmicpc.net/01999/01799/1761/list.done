@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 40000
+
+typedef struct Item {
+    int e, d;
+} Item;
+typedef struct List {
+    int n, cap;
+    Item* items;
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+
+int N, M, IDX_ROOT;
+List* TREE[N_MAX];
+int TRACE_ROOT[N_MAX];
+
+int build_tree_hierarchy(int here);
+int find_common_root(int a, int b);
+int d_to_root(int s, int e);
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) TREE[n] = List__init__(3);
+
+    for (int n = 0; n < N - 1; n++) {
+        int s, e, d;
+        scanf("%d %d %d", &s, &e, &d);
+        Item s_e = {e - 1, d};
+        Item e_s = {s - 1, d};
+        List_append(TREE[s - 1], s_e);
+        List_append(TREE[e - 1], e_s);
+        if (n == 0) IDX_ROOT = s - 1;
+    }
+    // build_tree_hierarchy(IDX_ROOT);
+
+    scanf("%d", &M);
+    for (int m = 0; m < M; m++) {
+        int s, e;
+        scanf("%d %d", &s, &e);
+        s--;
+        e--;
+        int common_root = find_common_root(s, e);
+        int s_to_root = d_to_root(s, common_root);
+        int e_to_root = d_to_root(e, common_root);
+        printf("%d\n", s_to_root + e_to_root);
+    }
+    return 0;
+}
+
+int d_to_root(int s, int e) {
+    int here = s;
+    int sum = 0;
+    while (here != IDX_ROOT) {
+        int parent = TREE[here]->items[0].e;
+        sum += TREE[here]->items[0].d;
+        here = parent;
+    }
+    return sum;
+}
+
+int find_common_root(int a, int b) {
+    int here = a;
+    while (1) {
+        TRACE_ROOT[here] = 1;
+        if (here == IDX_ROOT) break;
+        here = TREE[here]->items[0].e;
+    }
+    here = b;
+    while (1) {
+        if (TRACE_ROOT[here]) break;
+        here = TREE[here]->items[0].e;
+    }
+    for (int n = 0; n < N; n++) TRACE_ROOT[n] = 0;
+    return here;
+}
+
+// int build_tree_hierarchy(int here) {
+//     int s = 1;
+//     if (IDX_ROOT == here) s = 0;
+//     for (int i = s; i < TREE[here]->n; i++) {
+//         int child = TREE[here]->items[i].e;
+//         int parent_idx;
+//         for (int j = 0; j < TREE[here]->n; j++) {
+//             if (TREE[child]->items[j].e == here) {
+//                 parent_idx = j;
+//                 break;
+//             }
+//         }
+//         Item temp = TREE[child]->items[parent_idx];
+//         TREE[child]->items[parent_idx] = TREE[child]->items[0];
+//         TREE[child]->items[0] = temp;
+//         build_tree_hierarchy(child);
+//     }
+//     return 0;
+// };
+
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}

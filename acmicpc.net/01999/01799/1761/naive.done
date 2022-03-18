@@ -1,0 +1,120 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 40001
+
+typedef struct Item {
+    int e, d;
+} Item;
+typedef struct List {
+    int n, cap;
+    Item* items;
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+
+int N, M;
+List* TREE[N_MAX];
+int PARENT[N_MAX];
+int D_TO_ROOT[N_MAX];
+int IDX_ROOT;
+
+int VISITED[N_MAX];
+int TRACE[N_MAX];
+
+int build_tree(int prev, int here);
+int find_common_root(int a, int b);
+int get_sum(int from, int to);
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 1; n <= N; n++) TREE[n] = List__init__(3);
+
+    for (int n = 0; n < N - 1; n++) {
+        int s, e, d;
+        scanf("%d %d %d", &s, &e, &d);
+        Item s_e = {e, d};
+        Item e_s = {s, d};
+        List_append(TREE[s], s_e);
+        List_append(TREE[e], e_s);
+        if (n == 0) IDX_ROOT = s;
+    }
+    build_tree(0, IDX_ROOT);
+
+    scanf("%d", &M);
+    for (int i = 0; i < M; i++) {
+        int s, e;
+        scanf("%d %d", &s, &e);
+        int common_root = find_common_root(s, e);
+        printf("%d\n",
+               D_TO_ROOT[s] + D_TO_ROOT[e] - 2 * D_TO_ROOT[common_root]);
+    }
+    return 0;
+}
+
+int build_tree(int prev, int here) {
+    for (int i = 0; i < TREE[here]->n; i++) {
+        int new = TREE[here]->items[i].e;
+        if (new == prev) continue;
+        PARENT[new] = here;
+        D_TO_PARENT[new] = TREE[here]->items[i].d;
+        build_tree(here, new);
+    }
+    return 0;
+}
+
+int find_common_root(int a, int b) {
+    int d_to_root = 0;
+    while (1) {
+        VISITED[a] = 1;
+        TRACE[d_to_root++] = a;
+        if (a == IDX_ROOT) break;
+        a = PARENT[a];
+    }
+    while (1) {
+        if (VISITED[b]) break;
+        b = PARENT[b];
+    }
+    for (int i = 0; i < d_to_root; i++) {
+        VISITED[TRACE[i]] = 0;
+    }
+    return b;
+}
+
+int get_sum(int from, int to) {
+    int sum = 0;
+    while (from != to) {
+        sum += D_TO_PARENT[from];
+        from = PARENT[from];
+    }
+    return sum;
+}
+
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}

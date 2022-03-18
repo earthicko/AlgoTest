@@ -1,0 +1,159 @@
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 100000
+#define COORD_MAX 40000
+
+typedef long long ll;
+
+typedef struct Node {
+    ll x, y;
+} Node;
+typedef struct Stack {
+    int n, cap;
+    Node* items;
+} Stack;
+Stack* Stack__init__(int cap_);
+int Stack__del__(Stack* del);
+int Stack_resize(Stack* this, int cap_);
+int Stack_push(Stack* this, Node new);
+Node Stack_pop(Stack* this);
+Node Stack_peek(Stack* this, int i);
+
+int N;
+Node x_axis = {1, 0};
+Node COORDS[N_MAX];
+Node S_P = {COORD_MAX, COORD_MAX};
+
+// ll dot_product(Node a, Node b);
+ll cross_product(Node* a, Node* b);
+int is_stack_tail_ccw(Stack* s, Node new_p);
+int cmp_node(const void* a, const void* b);
+
+int main() {
+    scanf("%d", &N);
+    int idx_start;
+    for (int n = 0; n < N; n++) {
+        scanf("%lld %lld", &COORDS[n].x, &COORDS[n].y);
+        if ((COORDS[n].y < S_P.y) ||
+            (COORDS[n].y == S_P.y && COORDS[n].x < S_P.x)) {
+            idx_start = n;
+            S_P.x = COORDS[n].x;
+            S_P.y = COORDS[n].y;
+        }
+    }
+    N--;
+    for (int i = idx_start; i < N; i++) COORDS[i] = COORDS[i + 1];
+    qsort(COORDS, N, sizeof(Node), cmp_node);
+#ifndef ONLINE_JUDGE
+    printf("Sorted: ");
+    for (int i = 0; i < N; i++) printf("(%d, %d) ", COORDS[i].x, COORDS[i].y);
+    printf("\n");
+#endif
+    Stack* stack = Stack__init__(N_MAX);
+    Stack_push(stack, S_P);
+#ifndef ONLINE_JUDGE
+    printf("Start from (%d, %d)\n", S_P.x, S_P.y);
+#endif
+    for (int i = 0; i < N; i++) {
+        if (COORDS[i].x == S_P.x && COORDS[i].y == S_P.y) continue;
+#ifndef ONLINE_JUDGE
+        printf("Inspect (%d, %d)\n", COORDS[i].x, COORDS[i].y);
+#endif
+        while (stack->n > 1 && !is_stack_tail_ccw(stack, COORDS[i])) {
+#ifndef ONLINE_JUDGE
+            printf("(%d, %d) is not part of convex hull\n",
+                   Stack_peek(stack, 0).x, Stack_peek(stack, 0).y);
+#endif
+            Stack_pop(stack);
+        }
+        Stack_push(stack, COORDS[i]);
+#ifndef ONLINE_JUDGE
+        printf("Push (%d, %d)\n", Stack_peek(stack, 0).x,
+               Stack_peek(stack, 0).y);
+#endif
+    }
+
+    printf("%d\n", stack->n);
+
+    return 0;
+}
+
+// ll dot_product(Node a, Node b) {
+//     return (a.x * b.x + a.y * b.y);
+// }  // max 6400000000
+ll cross_product(Node* a, Node* b) {
+    return (a->x * b->y - a->y * b->x);
+}  // max 6400000000
+int is_stack_tail_ccw(Stack* s, Node new_p) {
+    Node p2 = Stack_peek(s, 1);
+    Node p1 = Stack_peek(s, 0);
+    Node p0 = new_p;
+    Node v21 = {p1.x - p2.x, p1.y - p2.y};
+    Node v10 = {p0.x - p1.x, p0.y - p1.y};
+    if (cross_product(&v21, &v10) > 0) return 1;
+    return 0;
+}
+
+double sq_cos_node(Node* p) {
+    double dx = p->x - S_P.x;         // max 80000
+    double dy = p->y - S_P.y;         // max 80000
+    double sq_r = dx * dx + dy * dy;  // max sqrt 6400000000
+    double sq_cos = dx * dx / sq_r;
+    if (dx < 0) sq_cos = -sq_cos;
+    return sq_cos;
+}
+ll sq_d_from_start(Node* p) {
+    ll dx = p->x - S_P.x;  // max 80000
+    ll dy = p->y - S_P.y;  // max 80000
+    return dx * dx + dy * dy;
+}
+int cmp_node(const void* a, const void* b) {
+    double cos_a = sq_cos_node((Node*)a);
+    double cos_b = sq_cos_node((Node*)b);
+    if (cos_a < cos_b) return 1;
+    if (cos_a == cos_b) {
+        ll d_a = sq_d_from_start((Node*)a);
+        ll d_b = sq_d_from_start((Node*)b);
+        if (d_a > d_b) return 1;
+        if (d_a == d_b) return 0;
+        return -1;
+    }
+    return -1;
+}
+Stack* Stack__init__(int cap_) {
+    Stack* new = (Stack*)malloc(sizeof(Stack));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Node*)malloc(sizeof(Node) * cap_);
+    return new;
+}
+int Stack__del__(Stack* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int Stack_resize(Stack* this, int cap_) {
+    Node* temp = this->items;
+    this->items = (Node*)malloc(sizeof(Node) * cap_);
+    int copy_max = (this->n < cap_) ? this->n : cap_;
+    for (int i = 0; i < copy_max; i++) this->items[i] = temp[i];
+    free(temp);
+    return 0;
+}
+int Stack_push(Stack* this, Node new) {
+    if (this->n == this->cap) Stack_resize(this, this->cap * 2);
+    this->items[this->n++] = new;
+    return 0;
+}
+Node Stack_pop(Stack* this) {
+    assert(this->n > 0);
+    Node output = this->items[this->n-- - 1];
+    return output;
+}
+Node Stack_peek(Stack* this, int i) {
+    assert(this->n > i);
+    return this->items[this->n - 1 - i];
+}

@@ -1,0 +1,247 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 100000
+#define COORD_MAX 40000
+#define ONLINE_JUDGE
+const double E = 10e-6;
+typedef struct Node {
+    double x, y;
+} Node;
+typedef struct Heap {
+    int (*cmp)(struct Heap*, int, int);
+    int n;  // index where last element is (0 when empty)
+    int cap;
+    Node* data;  // 1: root / 2~3: level 1 / 4~7: level 2...
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(struct Heap*, int, int));
+int Heap__del__(Heap* this);
+int Heap_max_compare_node(Heap* this, int idx_a, int idx_b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, Node new_val);
+Node Heap_pop(Heap* this);
+int Heap_realloc(Heap* this, int new_cap);
+typedef Node Item;
+typedef struct Stack {
+    int n, cap;
+    Item* items;
+} Stack;
+Stack* Stack__init__(int cap_);
+int Stack__del__(Stack* del);
+int Stack_resize(Stack* this, int cap_);
+int Stack_push(Stack* this, Item new);
+Item Stack_pop(Stack* this);
+Item Stack_peek(Stack* this, int i);
+
+int N;
+Node COORDS[N_MAX];
+Node S_P = {COORD_MAX, COORD_MAX};
+int IDX_S_P;
+
+double dot_product(Node a, Node b);
+double cross_product(Node a, Node b);
+double is_stack_tail_ccw(Stack* s);
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        scanf("%lf %lf", &COORDS[n].x, &COORDS[n].y);
+        if (COORDS[n].y <= S_P.y && COORDS[n].x < S_P.x) {
+            IDX_S_P = n;
+            S_P.x = COORDS[n].x;
+            S_P.y = COORDS[n].y;
+        }
+    }
+    Heap* queue = Heap__init__(N_MAX, Heap_max_compare_node);
+    for (int n = 0; n < N; n++)
+        if (n != IDX_S_P) Heap_push(queue, COORDS[n]);
+
+    Stack* stack = Stack__init__(N_MAX);
+    Stack_push(stack, S_P);
+    for (int i = 0; i < N - 1; i++) {
+        Node this = Heap_pop(queue);
+        Stack_push(stack, this);
+#ifndef ONLINE_JUDGE
+        printf("Push (%lf, %lf)\n", this.x, this.y);
+#endif
+        while (stack->n >= 3) {
+            double dot = is_stack_tail_ccw(stack);
+#ifndef ONLINE_JUDGE
+            printf("(%lf, %lf) - (%lf, %lf) - (%lf, %lf) dot %lf\n",
+                   Stack_peek(stack, 2).x, Stack_peek(stack, 2).y,
+                   Stack_peek(stack, 1).x, Stack_peek(stack, 1).y,
+                   Stack_peek(stack, 0).x, Stack_peek(stack, 0).y, dot);
+#endif
+            if (dot <= E) {
+#ifndef ONLINE_JUDGE
+                printf("(%lf, %lf) is not part of convex hull\n",
+                       Stack_peek(stack, 1).x, Stack_peek(stack, 1).y);
+#endif
+                Node top = Stack_pop(stack);
+                Stack_pop(stack);
+                Stack_push(stack, top);
+            } else {
+                break;
+            }
+        }
+    }
+
+    printf("%d\n", stack->n);
+
+    return 0;
+}
+
+double dot_product(Node a, Node b) { return (a.x * b.x + a.y * b.y); }
+double cross_product(Node a, Node b) { return (a.x * b.y - a.y * b.x); }
+double is_stack_tail_ccw(Stack* s) {
+    Node p2 = Stack_peek(s, 2);
+    Node p1 = Stack_peek(s, 1);
+    Node p0 = Stack_peek(s, 0);
+    Node v21 = {p1.x - p2.x, p1.y - p2.y};
+    Node v10 = {p0.x - p1.x, p0.y - p1.y};
+    return cross_product(v21, v10);
+}
+Heap* Heap__init__(int cap_, int (*cmp_)(struct Heap*, int, int)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (Node*)malloc(sizeof(Node) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int Heap_max_compare_node(Heap* this, int a, int b) {
+    Node x_axis = {1, 0};
+    Node vec_a = {this->data[a].x - S_P.x, this->data[a].y - S_P.y};
+    Node vec_b = {this->data[b].x - S_P.x, this->data[b].y - S_P.y};
+
+    double dot_a = dot_product(x_axis, vec_a);
+    double sq_len_a = vec_a.x * vec_a.x + vec_a.y * vec_a.y;
+    double sq_cos_a = (dot_a * dot_a) / sq_len_a;
+    if (dot_a < 0) sq_cos_a = -sq_cos_a;
+
+    double dot_b = dot_product(x_axis, vec_b);
+    double sq_len_b = vec_b.x * vec_b.x + vec_b.y * vec_b.y;
+    double sq_cos_b = (dot_b * dot_b) / sq_len_b;
+    if (dot_b < 0) sq_cos_b = -sq_cos_b;
+
+    if (sq_cos_a < sq_cos_b) return 1;
+    if (sq_cos_a == sq_cos_b) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_idx) {
+    if (s_idx == 1) return 0;
+    int parent_idx = s_idx / 2;
+    if (this->cmp(this, parent_idx, s_idx) == 1) {
+        Node temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_idx];
+        this->data[s_idx] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* this, int s_idx) {
+    int l_idx = s_idx * 2;
+    int r_idx = s_idx * 2 + 1;
+    Node parent, l, r;
+    char swap = 0;
+    if (l_idx <= this->n) {
+        parent = this->data[s_idx];
+        l = this->data[l_idx];
+        if (r_idx <= this->n) {
+            r = this->data[r_idx];
+            if (this->cmp(this, s_idx, l_idx) == 1 &&
+                this->cmp(this, s_idx, r_idx) == 1) {
+                if (this->cmp(this, r_idx, l_idx) >= 0)
+                    swap = 1;
+                else
+                    swap = 2;
+            } else if (this->cmp(this, s_idx, l_idx) == 1) {
+                swap = 1;
+            } else if (this->cmp(this, s_idx, r_idx) == 1) {
+                swap = 2;
+            }
+        } else {
+            if (this->cmp(this, s_idx, l_idx) == 1) swap = 1;
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            this->data[l_idx] = parent;
+            this->data[s_idx] = l;
+            Heap_sort_from_top(this, l_idx);
+            break;
+        case 2:  // swap with right child
+            this->data[r_idx] = parent;
+            this->data[s_idx] = r;
+            Heap_sort_from_top(this, r_idx);
+            break;
+        default:
+            break;
+    }
+
+    return 0;
+}
+int Heap_push(Heap* this, Node new_val) {
+    if (this->n + 1 == this->cap) Heap_realloc(this, this->cap * 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+Node Heap_pop(Heap* this) {
+    Node top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    this->data = (Node*)realloc(this->data, sizeof(Node) * new_cap);
+    return 0;
+}
+Stack* Stack__init__(int cap_) {
+    Stack* new = (Stack*)malloc(sizeof(Stack));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int Stack__del__(Stack* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int Stack_resize(Stack* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    int copy_max = (this->n < cap_) ? this->n : cap_;
+    for (int i = 0; i < copy_max; i++) this->items[i] = temp[i];
+    free(temp);
+    return 0;
+}
+int Stack_push(Stack* this, Item new) {
+    if (this->n == this->cap) Stack_resize(this, this->cap * 2);
+    this->items[this->n++] = new;
+    return 0;
+}
+Item Stack_pop(Stack* this) {
+    assert(this->n > 0);
+    Item output = this->items[this->n-- - 1];
+    return output;
+}
+Item Stack_peek(Stack* this, int i) {
+    assert(this->n > i);
+    return this->items[this->n - 1 - i];
+}
