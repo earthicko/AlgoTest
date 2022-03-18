@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define DIGIT_MAX 50
+#define N_MAX 15
+typedef long long ll;
+typedef struct bigint {
+    int num[DIGIT_MAX];
+    int n;
+    int mod_k;
+} bigint;
+bigint bignums[N_MAX];
+int pow_10_mod[DIGIT_MAX * N_MAX];
+int pow_10_times_n_mod[DIGIT_MAX * N_MAX][10];
+int N, K;
+ll COUNT_ALL, COUNT_SUCCESS;
+int permute(int *v, const int start, const int n);
+ll get_gcd(ll a, ll b);
+int main() {
+    scanf("%d", &N);
+
+    for (int n = 0; n < N; n++) {
+        char bignum[DIGIT_MAX + 1];
+        scanf("%s", bignum);
+        bignums[n].n = strlen(bignum);
+        for (int i = 0; i < bignums[n].n; i++)
+            bignums[n].num[i] = bignum[i] - '0';
+    }
+
+    scanf("%d", &K);
+
+    pow_10_mod[0] = 1;
+    for (int j = 0; j < 10; j++) pow_10_times_n_mod[0][j] = j % K;
+    for (int i = 1; i < DIGIT_MAX * N_MAX; i++) {
+        pow_10_mod[i] = (pow_10_mod[i - 1] * 10) % K;
+        for (int j = 0; j < 10; j++) {
+            pow_10_times_n_mod[i][j] = (pow_10_mod[i] * j) % K;
+        }
+    }
+
+    for (int n = 0; n < N; n++) {
+        for (int digit_i = bignums[n].n - 1; digit_i >= 0; digit_i--) {
+            int exp_10 = bignums[n].n - 1 - digit_i;
+            bignums[n].mod_k +=
+                pow_10_times_n_mod[exp_10][bignums[n].num[digit_i]];
+        }
+    }
+
+    int *v = (int *)malloc(sizeof(int) * N);
+    for (int i = 0; i < N; i++) v[i] = i;
+    permute(v, 0, N);
+    if (COUNT_SUCCESS == 0) {
+        printf("0/1\n");
+    } else {
+        ll gcd = get_gcd(COUNT_ALL, COUNT_SUCCESS);
+        COUNT_ALL /= gcd;
+        COUNT_SUCCESS /= gcd;
+        printf("%lld/%lld\n", COUNT_SUCCESS, COUNT_ALL);
+    }
+    return 0;
+}
+int try(const int *v, const int size) {
+    int exp_10 = 0;
+    // calc BIG INT % K
+    int mod = 0;
+    for (int i = 0; i < size; i++) {
+        int num_i = v[i];
+        mod += bignums[num_i].mod_k * pow_10_mod[exp_10];
+        exp_10 += bignums[num_i].n;
+    }
+    mod = mod % K;
+    COUNT_ALL++;
+    if (mod == 0) {
+        // printf("Success!\n");
+        COUNT_SUCCESS++;
+    } else {
+        // printf("Fail\n");
+    }
+    return 0;
+}
+int permute(int *v, const int start, const int n) {
+    try(v, n);
+    if (start < n) {
+        int i, j;
+        for (i = n - 2; i >= start; i--) {
+            for (j = i + 1; j < n; j++) {
+                int t;
+                t = v[i];
+                v[i] = v[j];
+                v[j] = t;
+                permute(v, i + 1, n);
+            }
+            int tmp = v[i];
+            for (int j = i; j < n - 1; j++) v[j] = v[j + 1];
+            v[n - 1] = tmp;
+        }
+    }
+    return 0;
+}
+ll get_gcd(ll a, ll b) {
+    ll r = a % b;
+    if (r == 0) {
+        return b;
+    }
+    return get_gcd(b, r);
+}

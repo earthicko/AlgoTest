@@ -1,0 +1,91 @@
+/*
+counter[i][r] = i상태에서 나머지가 r인 가짓수
+4개의 수 중 1번만 뽑으면 0001, 2, 3번을 뽑으면 0110... 이때 이 이진수를 i로 놓음
+i상태에서 i 내부에 꺼진 비트가 있는지 봄
+모든 꺼진 비트에 대해:
+    해당 비트를 켜면 i가 변화함 -> 다음 i
+    새로운 나머지를 구하면 다음 r이 나옴
+    새로운 나머지 구하기:
+        기존 나머지 * 10^(새로운 수의 자릿수)의 나머지 + 새로운 수 나머지
+아무것도 안 뽑음: 0000 (0), 모두 뽑음: 1111 (15) 2^N-1번까지 순회
+*/
+#include <stdio.h>
+#include <string.h>
+#define N_DIGIT_MAX 51
+#define N_MAX 15
+#define N_STATES_MAX 32768
+#define K_MAX 100
+typedef long long ll;
+int N, K;
+int exp_10_mod[N_DIGIT_MAX];
+char big_ints[N_MAX][N_DIGIT_MAX];
+int l_big_ints[N_MAX];
+int big_int_mod[N_MAX];
+ll counter[N_STATES_MAX][K_MAX];
+int count_remainders(int state);
+ll get_gcd(ll a, ll b);
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        scanf("%s", big_ints[n]);
+        l_big_ints[n] = strlen(big_ints[n]);
+    }
+    scanf("%d", &K);
+
+    exp_10_mod[0] = 1;
+    for (int i = 1; i < N_DIGIT_MAX; i++)
+        exp_10_mod[i] = (exp_10_mod[i - 1] * 10) % K;
+
+    for (int n = 0; n < N; n++) {
+        for (int digit_i = l_big_ints[n] - 1; digit_i >= 0; digit_i--) {
+            int pos_10 = l_big_ints[n] - 1 - digit_i;
+            int digit_mod = (big_ints[n][digit_i] - '0') * exp_10_mod[pos_10];
+            big_int_mod[n] += digit_mod;
+        }
+        big_int_mod[n] %= K;
+    }
+
+    counter[0][0] = 1;  // 아무것도 안 선택했을 때 나머지가 0인 경우는 단 하나,
+                        // 다른 나머지는 존재할 수 없음
+    for (int state = 0; state < (1 << N) - 1; state++) count_remainders(state);
+
+    if (counter[(1 << N) - 1][0] == 0)
+        printf("0/1\n");
+    else {
+        ll success = counter[(1 << N) - 1][0];
+        ll sum = 0;
+        for (int rem = 0; rem < K; rem++) sum += counter[(1 << N) - 1][rem];
+        ll gcd = get_gcd(sum, success);
+        success /= gcd;
+        sum /= gcd;
+        printf("%lld/%lld\n", success, sum);
+    }
+
+    return 0;
+}
+
+int count_remainders(int state) {
+    for (int num_i = 0; num_i < N; num_i++) {
+        if (state & (1 << num_i)) continue;
+        int next_i = state | (1 << num_i);
+
+        for (int rem = 0; rem < K; rem++) {
+            if (counter[state][rem] == 0) continue;
+
+            int n_digits_new_num = l_big_ints[num_i];
+            int pow_10_rem = exp_10_mod[n_digits_new_num];
+            int next_r = ((rem * pow_10_rem) + big_int_mod[num_i]) % K;
+
+            // printf("From state %d, rem %d, to state %d, rem %d add %lld\n",
+            //        state, rem, next_i, next_r, counter[state][rem]);
+            counter[next_i][next_r] += counter[state][rem];
+        }
+    }
+}
+ll get_gcd(ll a, ll b) {
+    ll r = a % b;
+    if (r == 0) {
+        return b;
+    }
+    return get_gcd(b, r);
+}
