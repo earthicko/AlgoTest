@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Mac: LLDB",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+            "cwd": "${fileDirname}",
+            "preLaunchTask": "Mac: C/C++: gcc 활성 파일 빌드"
+        },
+        {
             "name": "gcc - 활성 파일 빌드 및 디버그",
             "type": "cppdbg",
             "request": "launch",
