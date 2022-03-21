@@ -1,0 +1,21 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int N;
+int P[1000];
+
+int cmp(const void* a, const void* b) {
+    if (*(int*)a < *(int*)b) return 1;
+    if (*(int*)a == *(int*)b) return 0;
+    return -1;
+}
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) scanf("%d", &P[n]);
+    qsort(P, N, sizeof(int), cmp);
+    int ans = 0;
+    for (int n = 0; n < N; n++) ans += P[n] * (n + 1);
+    printf("%d\n", ans);
+    return 0;
+}

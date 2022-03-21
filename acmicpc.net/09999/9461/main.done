@@ -1,0 +1,29 @@
+#include <stdio.h>
+#define N_MAX 100
+
+int T, N;
+long long P[N_MAX];
+
+long long get_p_(int n) {
+    if (!P[n]) P[n] = get_p_(n - 1) + get_p_(n - 5);
+    return P[n];
+}
+
+long long get_p(int n) {
+    P[0] = 1;
+    P[1] = 1;
+    P[2] = 1;
+    P[3] = 2;
+    P[4] = 2;
+    for (int i = 5; i < n; i++) P[i] = 0;
+    return get_p_(n - 1);
+}
+
+int main() {
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        scanf("%d", &N);
+        printf("%lld\n", get_p(N));
+    }
+    return 0;
+}

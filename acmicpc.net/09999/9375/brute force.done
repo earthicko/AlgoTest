@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define N_MAX 30
+#define L_NAME_MAX 21
+
+int T, N;
+int n_category;
+int n_cloth[N_MAX];
+int i_category[N_MAX];
+char category_names[N_MAX][L_NAME_MAX];
+int ANS_CASE;
+
+int combination(int* items, int N, int R);
+
+int main() {
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        scanf("%d", &N);
+        for (int n = 0; n < N; n++) {
+            char category[N_MAX], cloth[N_MAX];
+            scanf("%s %s", cloth, category);
+
+            int existing_category = 0;
+            int i_cat = 0;
+            for (i_cat = 0; i_cat < n_category; i_cat++) {
+                if (strcmp(category_names[i_cat], category) == 0) {
+                    existing_category = 1;
+                    break;
+                }
+            }
+            if (existing_category == 1) {
+                n_cloth[i_cat]++;
+            } else {
+                strcpy(category_names[n_category], category);
+                n_cloth[n_category]++;
+                n_category++;
+            }
+        }
+        for (int i = 0; i < n_category; i++) i_category[i] = i;
+        ANS_CASE = 1;
+        for (int i = 0; i < n_category; i++) ANS_CASE *= (n_cloth[i] + 1);
+        ANS_CASE--;
+        printf("%d\n", ANS_CASE);
+        for (int i = 0; i < n_category; i++) n_cloth[i] = 0;
+        n_category = 0;
+    }
+    return 0;
+}
