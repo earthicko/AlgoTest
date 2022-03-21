@@ -1,0 +1,40 @@
+#include <stdio.h>
+#define N_MAX 1001
+const int P = 10007;
+int N;
+// 0: 세로, 1: 가로x2, 2: 2x2
+int N_TYPES[N_MAX][3];
+
+int get_n_types(int n, int type) {
+    if (type == 0 && N_TYPES[n][type] == -1)
+        N_TYPES[n][type] = (get_n_types(n - 1, 0) + get_n_types(n - 1, 1) +
+                            get_n_types(n - 1, 2)) %
+                           P;
+    if (type == 1 && N_TYPES[n][type] == -1)
+        N_TYPES[n][type] = (get_n_types(n - 2, 0) + get_n_types(n - 2, 1) +
+                            get_n_types(n - 2, 2)) %
+                           P;
+    if (type == 2 && N_TYPES[n][type] == -1)
+        N_TYPES[n][type] = (get_n_types(n - 2, 0) + get_n_types(n - 2, 1) +
+                            get_n_types(n - 2, 2)) %
+                           P;
+    return N_TYPES[n][type];
+}
+
+int main() {
+    N_TYPES[1][0] = 1;
+    N_TYPES[1][1] = 0;
+    N_TYPES[1][2] = 0;
+    N_TYPES[2][0] = 1;
+    N_TYPES[2][1] = 1;
+    N_TYPES[2][2] = 1;
+    for (int i = 3; i < N_MAX; i++) {
+        N_TYPES[i][0] = -1;
+        N_TYPES[i][1] = -1;
+        N_TYPES[i][2] = -1;
+    }
+    scanf("%d", &N);
+    printf("%d\n",
+           (get_n_types(N, 0) + get_n_types(N, 1) + get_n_types(N, 2)) % P);
+    return 0;
+}

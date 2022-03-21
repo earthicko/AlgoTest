@@ -1,0 +1,43 @@
+/*
+
+F[i][0]: i번째 줄을 세로로 채우는 경우의 수
+
+i-1번째를 세로로 세운 수 + i-1번째를 가로로 채운 수
+
+F[i][1]: i번째 줄을 가로로 채우는 경우의 수
+
+i-2번째를 세로로 세운 수 + i-2번째를 가로로 채운 수
+
+F[1][0] = 1
+F[1][0] = 0
+F[2][0] = 1
+F[2][1] = 1
+*/
+
+#include <stdio.h>
+#define N_MAX 1001
+const int P = 10007;
+int N;
+int N_TYPES[N_MAX][2];
+
+int get_n_types(int n, int type) {
+    if (type == 0 && N_TYPES[n][type] == -1)
+        N_TYPES[n][type] = (get_n_types(n - 1, 0) + get_n_types(n - 1, 1)) % P;
+    if (type == 1 && N_TYPES[n][type] == -1)
+        N_TYPES[n][type] = (get_n_types(n - 2, 0) + get_n_types(n - 2, 1)) % P;
+    return N_TYPES[n][type];
+}
+
+int main() {
+    N_TYPES[1][0] = 1;
+    N_TYPES[1][1] = 0;
+    N_TYPES[2][0] = 1;
+    N_TYPES[2][1] = 1;
+    for (int i = 3; i < N_MAX; i++) {
+        N_TYPES[i][0] = -1;
+        N_TYPES[i][1] = -1;
+    }
+    scanf("%d", &N);
+    printf("%d\n", (get_n_types(N, 0) + get_n_types(N, 1)) % P);
+    return 0;
+}
