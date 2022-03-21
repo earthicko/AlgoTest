@@ -1,0 +1,37 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int arr[4] = {1, 2, 3, 4};
+
+int combination_(int* items, int* temp, int N, int R, int q) {
+    if (R == 0) {
+        for (int i = q - 1; i >= 0; i--) {
+            printf("%d ", temp[i]);
+        }
+        printf("\n");
+    } else if (N < R) {
+        return -1;
+    } else {
+        temp[R - 1] = items[N - 1];
+        combination_(items, temp, N - 1, R - 1, q);
+        combination_(items, temp, N - 1, R, q);
+    }
+    return 0;
+}
+
+int combination(int* items, int N, int R) {
+    int* temp = (int*)malloc(sizeof(int) * N);
+    combination_(items, temp, N, R, R);
+    free(temp);
+    return 0;
+}
+
+int main() {
+    int N = 4;
+    int R = 4;
+
+    // permutation(N, R, R);
+    combination(arr, N, R);
+
+    return 0;
+}
