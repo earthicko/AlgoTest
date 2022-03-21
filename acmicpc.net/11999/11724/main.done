@@ -1,0 +1,56 @@
+#include <stdio.h>
+#define N_MAX 1001
+
+int N, M;
+int PARENT[N_MAX], LEVEL[N_MAX];
+
+int find(int node) {
+    if (PARENT[node] == node) return node;
+    return find(PARENT[node]);
+}
+
+int merge(int u, int v) {
+    int parent_u = find(u);
+    int parent_v = find(v);
+    if (parent_u == parent_v) return 0;
+    if (LEVEL[parent_u] > LEVEL[parent_v]) {
+        int temp = parent_u;
+        parent_u = parent_v;
+        parent_v = temp;
+    }
+    PARENT[parent_u] = parent_v;
+    if (LEVEL[parent_u] == LEVEL[parent_v]) LEVEL[parent_v]++;
+    return 0;
+}
+
+int main() {
+    scanf("%d %d", &N, &M);
+    for (int n = 1; n <= N; n++) {
+        PARENT[n] = n;
+        LEVEL[n] = 1;
+    }
+    for (int m = 0; m < M; m++) {
+        int s, e;
+        scanf("%d %d", &s, &e);
+        merge(s, e);
+    }
+
+    int unique_parents[N_MAX];
+    int n_unique_parents = 0;
+    for (int n = 1; n <= N; n++) {
+        int parent = find(n);
+        int is_unique = 1;
+        for (int i = 0; i < n_unique_parents; i++) {
+            if (unique_parents[i] == parent) {
+                is_unique = 0;
+                break;
+            }
+        }
+        if (is_unique) {
+            unique_parents[n_unique_parents] = parent;
+            n_unique_parents++;
+        }
+    }
+    printf("%d\n", n_unique_parents);
+    return 0;
+}
