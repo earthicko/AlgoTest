@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 1000000
+
+typedef struct index {
+    int val, i;
+} index;
+int N;
+index X[N_MAX];
+int CMP_X[N_MAX];
+
+int cmp(const void* a, const void* b) {  // 오름차순
+    if (((index*)a)->val > ((index*)b)->val) return 1;
+    if (((index*)a)->val < ((index*)b)->val) return -1;
+    return 0;
+}
+
+int main() {
+    scanf("%d", &N);
+    for (int n = 0; n < N; n++) {
+        scanf("%d", &(X[n].val));
+        X[n].i = n;
+    }
+    qsort(X, N, sizeof(index), cmp);
+
+    int prev_val = -1000000001;
+    int n_prev_indices = -1;
+    for (int n = 0; n < N; n++) {
+        if (prev_val != X[n].val) {
+            n_prev_indices++;
+            prev_val = X[n].val;
+        }
+        CMP_X[X[n].i] = n_prev_indices;
+    }
+
+    for (int n = 0; n < N; n++) printf("%d ", CMP_X[n]);
+
+    return 0;
+}

@@ -1,0 +1,33 @@
+#include <stdio.h>
+#define N_MAX 100
+
+int N;
+int CON[N_MAX][N_MAX];
+int IS_REACHABLE[N_MAX][N_MAX];
+int VISITED[N_MAX];
+
+int do_dfs(int s, int from) {
+    for (int e = 0; e < N; e++) {
+        if (VISITED[e] || !CON[from][e]) continue;
+        IS_REACHABLE[s][e] = 1;
+        VISITED[e] = 1;
+        do_dfs(s, e);
+    }
+    return 0;
+}
+
+int main() {
+    scanf("%d", &N);
+    for (int s = 0; s < N; s++)
+        for (int e = 0; e < N; e++) scanf("%d", &CON[s][e]);
+
+    for (int s = 0; s < N; s++) {
+        for (int i = 0; i < N; i++) VISITED[i] = 0;
+        do_dfs(s, s);
+    }
+    for (int s = 0; s < N; s++) {
+        for (int e = 0; e < N; e++) printf("%d ", IS_REACHABLE[s][e]);
+        printf("\n");
+    }
+    return 0;
+}

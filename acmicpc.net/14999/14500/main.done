@@ -1,0 +1,176 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 500
+
+/*
+1x4: ㅡ*1
+4x1: ㅣ*1
+2x2: ㅁ*1
+2x3: ㄴ*4
+2x3: ㄹ*2
+2x3: ㅗ*2
+3x2: ㄴ*4
+3x2: ㄹ*2
+3x2: ㅗ*2
+*/
+
+typedef struct pattern {
+    int* shape;
+    int h, w;
+} pattern;
+
+int R, C;
+int MAP[N_MAX][N_MAX];
+pattern PAT[19];
+
+int try(pattern pat, int r, int c) {
+    int sum = 0;
+    int k = 0;
+    for (int h = 0; h < pat.h; h++)
+        for (int w = 0; w < pat.w; w++) {
+            sum += MAP[r + h][c + w] * pat.shape[k];
+            k++;
+        }
+    return sum;
+};
+
+int build() {
+    for (int i = 0; i < 1; i++) {
+        PAT[i].h = 1;
+        PAT[i].w = 4;
+    }
+    for (int i = 1; i < 2; i++) {
+        PAT[i].h = 4;
+        PAT[i].w = 1;
+    }
+    for (int i = 2; i < 3; i++) {
+        PAT[i].h = 2;
+        PAT[i].w = 2;
+    }
+    for (int i = 3; i < 11; i++) {
+        PAT[i].h = 2;
+        PAT[i].w = 3;
+    }
+    for (int i = 11; i < 19; i++) {
+        PAT[i].h = 3;
+        PAT[i].w = 2;
+    }
+    for (int i = 0; i < 19; i++)
+        PAT[i].shape = (int*)malloc(sizeof(int) * PAT[i].h * PAT[i].w);
+    int pat_1_4[1][1][4] = {{{1, 1, 1, 1}}};
+    int pat_4_1[1][4][1] = {{{1}, {1}, {1}, {1}}};
+    int pat_2_2[1][2][2] = {{{1, 1}, {1, 1}}};
+    int pat_2_3[8][2][3] = {{
+                                {1, 0, 0},
+                                {1, 1, 1},
+                            },
+                            {
+                                {1, 1, 1},
+                                {1, 0, 0},
+                            },
+                            {
+                                {0, 0, 1},
+                                {1, 1, 1},
+                            },
+                            {
+                                {1, 1, 1},
+                                {0, 0, 1},
+                            },
+                            {
+                                {1, 1, 0},
+                                {0, 1, 1},
+                            },
+                            {
+                                {0, 1, 1},
+                                {1, 1, 0},
+                            },
+                            {
+                                {0, 1, 0},
+                                {1, 1, 1},
+                            },
+                            {
+                                {1, 1, 1},
+                                {0, 1, 0},
+                            }};
+    int pat_3_2[8][3][2] = {{
+                                {1, 0},
+                                {1, 0},
+                                {1, 1},
+                            },
+                            {
+                                {0, 1},
+                                {0, 1},
+                                {1, 1},
+                            },
+                            {
+                                {1, 1},
+                                {1, 0},
+                                {1, 0},
+                            },
+                            {
+                                {1, 1},
+                                {0, 1},
+                                {0, 1},
+                            },
+                            {
+                                {1, 0},
+                                {1, 1},
+                                {0, 1},
+                            },
+                            {
+                                {0, 1},
+                                {1, 1},
+                                {1, 0},
+                            },
+                            {
+                                {1, 0},
+                                {1, 1},
+                                {1, 0},
+                            },
+                            {
+                                {0, 1},
+                                {1, 1},
+                                {0, 1},
+                            }};
+    for (int i = 0; i < 1; i++)
+        for (int r = 0; r < PAT[i].h; r++)
+            for (int c = 0; c < PAT[i].w; c++)
+                PAT[i].shape[r * PAT[i].w + c] = pat_1_4[i - 0][r][c];
+    for (int i = 1; i < 2; i++)
+        for (int r = 0; r < PAT[i].h; r++)
+            for (int c = 0; c < PAT[i].w; c++)
+                PAT[i].shape[r * PAT[i].w + c] = pat_4_1[i - 1][r][c];
+    for (int i = 2; i < 3; i++)
+        for (int r = 0; r < PAT[i].h; r++)
+            for (int c = 0; c < PAT[i].w; c++)
+                PAT[i].shape[r * PAT[i].w + c] = pat_2_2[i - 2][r][c];
+    for (int i = 3; i < 11; i++)
+        for (int r = 0; r < PAT[i].h; r++)
+            for (int c = 0; c < PAT[i].w; c++)
+                PAT[i].shape[r * PAT[i].w + c] = pat_2_3[i - 3][r][c];
+    for (int i = 11; i < 19; i++)
+        for (int r = 0; r < PAT[i].h; r++)
+            for (int c = 0; c < PAT[i].w; c++)
+                PAT[i].shape[r * PAT[i].w + c] = pat_3_2[i - 11][r][c];
+    return 0;
+}
+
+int main() {
+    build();
+    scanf("%d %d", &R, &C);
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++) scanf("%d", &MAP[r][c]);
+
+    int max = 0;
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++) {
+            for (int i = 0; i < 19; i++) {
+                if (PAT[i].h + r > R || PAT[i].w + c > C) continue;
+                int sum = try(PAT[i], r, c);
+                if (sum > max) max = sum;
+            }
+        }
+
+    printf("%d\n", max);
+    return 0;
+}
