@@ -1,58 +1,69 @@
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-typedef struct node {
+typedef struct Node {
     int data;
-    struct node* left;
-    struct node* right;
-    struct list* parent;
-} node;
+    struct Node* left;
+    struct Node* right;
+    struct List* parent;
+} Node;
+typedef struct List {
+    int n;
+    Node* head;
+    Node* tail;
+} List;
 
-typedef struct list {
-    int num_nodes;
-    node* head;
-    node* tail;
-} list;
+List* List__init__();
+int List__del__(List* this);
+Node* Node__init__(List* parent, int val);
+Node* List_append(List* this, int val);
+Node* List_insert(Node* reference, int val, char direction);
+Node* List_pop(List* this, int i);
 
-list* construct_list() {
-    list* constructed = (list*)malloc(sizeof(list));
-    constructed->num_nodes = 0;
+List* List__init__() {
+    List* constructed = (List*)malloc(sizeof(List));
+    constructed->n = 0;
     constructed->head = NULL;
     constructed->tail = NULL;
     return constructed;
 }
-
-node* construct_node(int val, list* p) {
-    node* constructed = (node*)malloc(sizeof(node));
+int List__del__(List* this) {
+    Node* deleted = this->head;
+    while (deleted != NULL) {
+        free(deleted);
+        deleted = deleted->right;
+    }
+    free(this);
+    return 0;
+}
+Node* Node__init__(List* parent, int val) {
+    Node* constructed = (Node*)malloc(sizeof(Node));
     constructed->data = val;
     constructed->left = NULL;
     constructed->right = NULL;
-    constructed->parent = p;
+    constructed->parent = parent;
     return constructed;
 }
-
-node* append_node(list* target, int val) {
-    node* new_node = construct_node(val, target);
-    if (target->num_nodes == 0) {
-        target->head = new_node;
-        target->tail = new_node;
+Node* List_append(List* this, int val) {
+    Node* new_node = Node__init__(this, val);
+    if (this->n == 0) {
+        this->head = new_node;
+        this->tail = new_node;
     } else {
-        target->tail->right = new_node;
-        new_node->left = target->tail;
-        target->tail = new_node;
+        this->tail->right = new_node;
+        new_node->left = this->tail;
+        this->tail = new_node;
     }
-    target->num_nodes++;
+    this->n++;
     return new_node;
 }
-
-node* insert_node(node* reference, int val, char direction) {
-    // direction) 0: left / 1: right
-
-    node* inserted = construct_node(val, reference->parent);
-    node* temp;
-    inserted->parent->num_nodes++;
-
-    if (direction) {
-        // right
+// direction) 0: left / 1: right
+Node* List_insert(Node* reference, int val, char direction) {
+    Node* inserted = Node__init__(reference->parent, val);
+    Node* temp;
+    inserted->parent->n++;
+    if (direction) {  // right
         temp = reference->right;
         reference->right = inserted;
         inserted->left = reference;
@@ -61,8 +72,7 @@ node* insert_node(node* reference, int val, char direction) {
             temp->left = inserted;
         else
             inserted->parent->tail = inserted;
-    } else {
-        // left
+    } else {  // left
         temp = reference->left;
         reference->left = inserted;
         inserted->right = reference;
@@ -72,17 +82,36 @@ node* insert_node(node* reference, int val, char direction) {
         else
             inserted->parent->head = inserted;
     }
-
     return inserted;
 }
+Node* List_pop(List* this, int i) {
+    assert(0 <= i && i < this->n);
+    this->n--;
+    Node* popped;
 
-int scan_nodes(struct node* start) {
-    printf("All nodes: ");
-    while (start->left != NULL) start = start->left;
-    while (start != NULL) {
-        printf("%d ", start->data);
-        start = start->right;
+    if (this->n == 0) {
+        popped = this->head;
+        this->head = NULL;
+        this->tail = NULL;
+        return popped;
     }
-    printf("\n");
-    return 0;
+
+    if (i == 0) {
+        popped = this->head;
+        this->head->right->left = NULL;
+        this->head = this->head->right;
+    } else if (i == this->n) {
+        popped = this->tail;
+        this->tail->left->right = NULL;
+        this->tail = this->tail->left;
+    } else {
+        popped = this->head;
+        while (i > 0) {
+            popped = popped->right;
+            i--;
+        }
+        popped->left->right = popped->right;
+        popped->right->left = popped->left;
+    }
+    return popped;
 }

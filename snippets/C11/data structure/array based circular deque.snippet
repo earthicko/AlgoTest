@@ -1,0 +1,71 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+typedef int Item;
+typedef struct Deque {
+    int n, cap, head;
+    Item* items;
+    int (*push)(struct Deque*, Item);
+    Item (*pop_head)(struct Deque*);
+    Item (*pop_tail)(struct Deque*);
+    Item (*peek)(struct Deque*);
+} Deque;
+Deque* Deque__init__(int cap_);
+int Deque__del__(Deque* this);
+int Deque_push(Deque* this, Item item);
+Item Deque_pop_head(Deque* this);
+Item Deque_pop_tail(Deque* this);
+Item Deque_peek(Deque* this, int i);
+int Deque_resize(Deque* this, int cap_);
+
+Deque* Deque__init__(int cap_) {
+    Deque* deque = (Deque*)malloc(sizeof(Deque));
+    deque->n = 0;
+    deque->cap = cap_;
+    deque->head = 0;
+    deque->items = (Item*)malloc(sizeof(Item) * cap_);
+    deque->push = Deque_push;
+    deque->pop_head = Deque_pop_head;
+    deque->pop_tail = Deque_pop_head;
+    deque->peek = Deque_peek;
+    return deque;
+}
+int Deque__del__(Deque* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Deque_push(Deque* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Deque_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Deque_pop_head(Deque* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+Item Deque_pop_tail(Deque* this) {
+    assert(this->n > 0);
+    Item out = this->items[(this->head + this->n) % this->cap];
+    this->n--;
+    return out;
+}
+Item Deque_peek(Deque* this, int i) {
+    return this->items[(this->head + 1 + (i % this->n)) % this->cap];
+}
+int Deque_resize(Deque* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}
