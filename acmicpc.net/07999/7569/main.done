@@ -1,0 +1,106 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 100
+typedef struct Item {
+    int m, n, h;
+} Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int M, N, H;
+int DAYS[N_MAX][N_MAX][N_MAX], VISITED[N_MAX][N_MAX][N_MAX];
+Item dir[6] = {{1, 0, 0},  {-1, 0, 0}, {0, 1, 0},
+               {0, -1, 0}, {0, 0, 1},  {0, 0, -1}};
+
+int main() {
+    Queue* q = Queue__init__(N_MAX * N_MAX * N_MAX);
+
+    scanf("%d %d %d", &M, &N, &H);
+    for (int h = 0; h < H; h++)
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m < M; m++) {
+                scanf("%d", &DAYS[m][n][h]);
+                if (DAYS[m][n][h] == 1) {
+                    VISITED[m][n][h] = 1;
+                    Item coord = {m, n, h};
+                    Queue_push(q, coord);
+                }
+            }
+
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+        for (int i = 0; i < 6; i++) {
+            Item there = {here.m + dir[i].m, here.n + dir[i].n,
+                          here.h + dir[i].h};
+            if (there.m < 0 || there.m >= M || there.n < 0 || there.n >= N ||
+                there.h < 0 || there.h >= H)
+                continue;
+            if (DAYS[there.m][there.n][there.h] == -1) continue;
+            if (VISITED[there.m][there.n][there.h]) continue;
+            VISITED[there.m][there.n][there.h] = 1;
+            DAYS[there.m][there.n][there.h] = DAYS[here.m][here.n][here.h] + 1;
+            Queue_push(q, there);
+        }
+    }
+
+    int max_days = 0;
+    for (int h = 0; h < H; h++)
+        for (int n = 0; n < N; n++)
+            for (int m = 0; m < M; m++) {
+                if (DAYS[m][n][h] == 0) {
+                    printf("-1");
+                    return 0;
+                }
+                if (DAYS[m][n][h] > max_days) max_days = DAYS[m][n][h];
+            }
+
+    printf("%d", max_days - 1);
+
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

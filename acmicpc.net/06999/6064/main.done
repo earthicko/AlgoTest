@@ -1,0 +1,27 @@
+#include <stdio.h>
+
+int get_gcd(int a, int b) {
+    int r = a % b;
+    if (r == 0) return b;
+    return get_gcd(b, r);
+}
+
+int main() {
+    int T;
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        int M, N, x, y;
+        scanf("%d %d %d %d", &M, &N, &x, &y);
+        int k = -1;
+        int limit = M * N / get_gcd(M, N);
+        y = y % N;
+        for (int k_ = x; k_ <= limit; k_ += M) {
+            if (k_ % N == y) {
+                k = k_;
+                break;
+            }
+        }
+        printf("%d\n", k);
+    }
+    return 0;
+}

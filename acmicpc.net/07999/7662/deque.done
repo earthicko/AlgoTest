@@ -1,0 +1,104 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+typedef int Item;
+typedef struct Deque {
+    int n, cap, head;
+    Item* items;
+} Deque;
+Deque* Deque__init__(int cap_);
+int Deque__del__(Deque* this);
+int Deque_push(Deque* this, Item item);
+Item Deque_pop_head(Deque* this);
+Item Deque_pop_tail(Deque* this);
+Item Deque_peek(Deque* this, int i);
+int Deque_resize(Deque* this, int cap_);
+
+int cmp(const void* a, const void* b);
+
+int main() {
+    int T;
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        Deque* dq = Deque__init__(1000002);
+        int K;
+        scanf("%d", &K);
+        for (int k = 0; k < K; k++) {
+            char command;
+            int value;
+            scanf(" %c", &command);
+            scanf("%d", &value);
+            if (command == 'I') {
+                Deque_push(dq, value);
+                qsort(dq->items + dq->head + 1, dq->n, sizeof(Item), cmp);
+            }
+            if (command == 'D') {
+                if (dq->n == 0) continue;
+                if (value == 1) {
+                    Deque_pop_tail(dq);
+                }
+                if (value == -1) {
+                    Deque_pop_head(dq);
+                }
+            }
+        }
+        if (dq->n == 0)
+            printf("EMPTY\n");
+        else
+            printf("%d %d\n", dq->items[dq->head + dq->n],
+                   dq->items[dq->head + 1]);
+    }
+    return 0;
+}
+int cmp(const void* a, const void* b) {  // 오름차순
+    if (*(int*)a > *(int*)b) return 1;
+    if (*(int*)a < *(int*)b) return -1;
+    return 0;
+}
+Deque* Deque__init__(int cap_) {
+    Deque* deque = (Deque*)malloc(sizeof(Deque));
+    deque->n = 0;
+    deque->cap = cap_;
+    deque->head = 0;
+    deque->items = (Item*)malloc(sizeof(Item) * cap_);
+    return deque;
+}
+int Deque__del__(Deque* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Deque_push(Deque* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Deque_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Deque_pop_head(Deque* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+Item Deque_pop_tail(Deque* this) {
+    assert(this->n > 0);
+    Item out = this->items[(this->head + this->n) % this->cap];
+    this->n--;
+    return out;
+}
+Item Deque_peek(Deque* this, int i) {
+    return this->items[(this->head + 1 + (i % this->n)) % this->cap];
+}
+int Deque_resize(Deque* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

@@ -1,0 +1,175 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+    struct List* parent;
+} Node;
+typedef struct List {
+    int n;
+    Node* head;
+    Node* tail;
+} List;
+List* List__init__();
+int List__del__(List* this);
+Node* Node__init__(List* parent, int val);
+Node* List_append(List* this, int val);
+Node* List_insert(Node* reference, int val, char direction);
+Node* List_pop(List* this, int i);
+
+int scan(List* l) {
+    Node* n = l->head;
+    while (n != NULL) {
+        printf("%d ", n->data);
+        n = n->right;
+    }
+    printf("\n");
+    return 0;
+}
+
+int main() {
+    int T;
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        List* q = List__init__();
+        int K;
+        scanf("%d", &K);
+        for (int k = 0; k < K; k++) {
+            char command;
+            scanf(" %c", &command);
+            int value;
+            scanf("%d", &value);
+            if (command == 'I') {
+                if (q->n == 0)
+                    List_append(q, value);
+                else {
+                    if (value < q->head->data)
+                        List_insert(q->head, value, 0);
+                    else {
+                        Node* cursor = q->head;
+                        while (cursor->right != NULL) {
+                            if (cursor->data <= value &&
+                                value < cursor->right->data)
+                                break;
+                            cursor = cursor->right;
+                        }
+                        List_insert(cursor, value, 1);
+                    }
+                }
+            } else {
+                if (q->n == 0) continue;
+                Node* popped;
+                if (value == 1)
+                    popped = List_pop(q, q->n - 1);
+                else
+                    popped = List_pop(q, 0);
+                free(popped);
+            }
+            // scan(q);
+        }
+        if (q->n == 0)
+            printf("EMPTY\n");
+        else
+            printf("%d %d\n", q->tail->data, q->head->data);
+        List__del__(q);
+    }
+    return 0;
+}
+
+List* List__init__() {
+    List* constructed = (List*)malloc(sizeof(List));
+    constructed->n = 0;
+    constructed->head = NULL;
+    constructed->tail = NULL;
+    return constructed;
+}
+int List__del__(List* this) {
+    Node* deleted = this->head;
+    while (deleted != NULL) {
+        free(deleted);
+        deleted = deleted->right;
+    }
+    free(this);
+    return 0;
+}
+Node* Node__init__(List* parent, int val) {
+    Node* constructed = (Node*)malloc(sizeof(Node));
+    constructed->data = val;
+    constructed->left = NULL;
+    constructed->right = NULL;
+    constructed->parent = parent;
+    return constructed;
+}
+Node* List_append(List* this, int val) {
+    Node* new_node = Node__init__(this, val);
+    if (this->n == 0) {
+        this->head = new_node;
+        this->tail = new_node;
+    } else {
+        this->tail->right = new_node;
+        new_node->left = this->tail;
+        this->tail = new_node;
+    }
+    this->n++;
+    return new_node;
+}
+// direction) 0: left / 1: right
+Node* List_insert(Node* reference, int val, char direction) {
+    Node* inserted = Node__init__(reference->parent, val);
+    Node* temp;
+    inserted->parent->n++;
+    if (direction) {  // right
+        temp = reference->right;
+        reference->right = inserted;
+        inserted->left = reference;
+        inserted->right = temp;
+        if (temp != NULL)
+            temp->left = inserted;
+        else
+            inserted->parent->tail = inserted;
+    } else {  // left
+        temp = reference->left;
+        reference->left = inserted;
+        inserted->right = reference;
+        inserted->left = temp;
+        if (temp != NULL)
+            temp->right = inserted;
+        else
+            inserted->parent->head = inserted;
+    }
+    return inserted;
+}
+Node* List_pop(List* this, int i) {
+    assert(0 <= i && i < this->n);
+    this->n--;
+    Node* popped;
+
+    if (this->n == 0) {
+        popped = this->head;
+        this->head = NULL;
+        this->tail = NULL;
+        return popped;
+    }
+
+    if (i == 0) {
+        popped = this->head;
+        this->head->right->left = NULL;
+        this->head = this->head->right;
+    } else if (i == this->n) {
+        popped = this->tail;
+        this->tail->left->right = NULL;
+        this->tail = this->tail->left;
+    } else {
+        popped = this->head;
+        while (i > 0) {
+            popped = popped->right;
+            i--;
+        }
+        popped->left->right = popped->right;
+        popped->right->left = popped->left;
+    }
+    return popped;
+}
