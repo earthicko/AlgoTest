@@ -1,0 +1,246 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define D_MAX 10000
+#define INF __INT32_MAX__
+
+typedef struct Node {
+    int num, d;
+} Node;
+typedef struct Heap {
+    int (*cmp)(Node*, Node*);
+    int n;
+    int cap;
+    Node* data;
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*));
+int Heap__del__(Heap* this);
+int Node_min_cmp(Node* a, Node* b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, Node new_val);
+Node Heap_pop(Heap* this);
+int Heap_remove(Heap* this, Node val);
+int Heap_realloc(Heap* this, int new_cap);
+
+int T, A, B;
+int MIN_TRIES[D_MAX], VISITED[D_MAX];
+char PREV_COMMAND[D_MAX];
+int PREV_TRACE[D_MAX];
+
+int D(int s);
+int S(int s);
+int L(int s);
+int R(int s);
+int (*funcs[4])(int) = {D, S, L, R};
+char func_names[4] = {'D', 'S', 'L', 'R'};
+
+int min_tries(int s, int e);
+int trace(int s, int e, int n_max);
+
+int main() {
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        scanf("%d %d", &A, &B);
+        min_tries(A, B);
+        trace(A, B, MIN_TRIES[B]);
+    }
+    return 0;
+}
+
+int min_tries(int s, int e) {
+    for (int i = 0; i < D_MAX; i++) {
+        MIN_TRIES[i] = INF;
+        VISITED[i] = 0;
+        PREV_COMMAND[i] = 0;
+        PREV_TRACE[i] = -1;
+    }
+    Heap* q = Heap__init__(D_MAX + 2, Node_min_cmp);
+    Node start = {s, 0};
+    MIN_TRIES[s] = 0;
+    Heap_push(q, start);
+
+    while (q->n > 0) {
+        Node here = Heap_pop(q);
+        assert(MIN_TRIES[here.num] < D_MAX);
+        for (int i = 0; i < 4; i++) {
+            Node there = {funcs[i](here.num), MIN_TRIES[here.num] + 1};
+            if (there.num == here.num) continue;
+            if (VISITED[there.num]) continue;
+            if (there.d < MIN_TRIES[there.num]) {
+                MIN_TRIES[there.num] = there.d;
+                Heap_push(q, there);
+                PREV_COMMAND[there.num] = func_names[i];
+                PREV_TRACE[there.num] = here.num;
+            }
+        }
+        VISITED[here.num] = 1;
+        if (here.num == e) break;
+    }
+    Heap__del__(q);
+
+    return 0;
+}
+
+int trace(int s, int e, int n_max) {
+    char commands[D_MAX];
+    int n_commands = 0;
+    while (s != e) {
+        commands[n_commands] = PREV_COMMAND[e];
+        n_commands++;
+        e = PREV_TRACE[e];
+        assert(n_commands <= n_max);
+    }
+
+    for (int i = n_commands - 1; i >= 0; i--) printf("%c", commands[i]);
+    printf("\n");
+    return 0;
+}
+
+int D(int s) { return (s * 2) % 10000; }
+int S(int s) {
+    s--;
+    if (s == -1) return 9999;
+    return s;
+}
+int L(int s) {
+    int top = s / 1000;
+    s = ((s * 10) % 10000) + top;
+    return s;
+}
+int R(int s) {
+    int bottom = s % 10;
+    s = (s / 10) + bottom * 1000;
+    return s;
+}
+
+Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (Node*)malloc(sizeof(Node) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int Node_min_cmp(Node* a, Node* b) {
+    // a > b => 1, a == b => 0, a < b => -1
+    if (a->d > b->d) return 1;
+    if (a->d == b->d) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_i) {
+    if (s_i == 1) return 0;
+    int parent_idx = s_i / 2;
+    if (this->cmp(this->data + parent_idx, this->data + s_i) == 1) {
+        // parent is bigger -> swap
+        Node temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_i];
+        this->data[s_i] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* h, int s_i) {
+    int l_i = s_i * 2;
+    int r_i = s_i * 2 + 1;
+
+    Node parent, l, r;
+
+    char swap = 0;
+    if (l_i <= h->n) {
+        // left child exists
+        parent = h->data[s_i];
+        l = h->data[l_i];
+        if (r_i <= h->n) {  // right child exists
+            r = h->data[r_i];
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1 &&
+                h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // both children are smaller
+                if (h->cmp(h->data + r_i, h->data + l_i) >= 0)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;  // swap with right child
+            } else if (h->cmp(h->data + s_i, h->data + l_i) == 1) {
+                // only left child is smaller
+                swap = 1;  // swap with left child
+            } else if (h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // only right child is smaller
+                swap = 2;  // swap with right child
+            }
+        } else {
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1)
+                swap = 1;  // swap with left child
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            h->data[l_i] = parent;
+            h->data[s_i] = l;
+            Heap_sort_from_top(h, l_i);
+            break;
+        case 2:  // swap with right child
+            h->data[r_i] = parent;
+            h->data[s_i] = r;
+            Heap_sort_from_top(h, r_i);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+int Heap_push(Heap* this, Node new_val) {
+    if (this->n + 1 == this->cap) Heap_realloc(this, this->cap * 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+Node Heap_pop(Heap* this) {
+    Node top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}
+int Heap_find(Heap* this, int from, Node val) {
+    if (this->cmp(this->data + from, &val) == 0) return from;
+    int l_i = from * 2;
+    int r_i = from * 2 + 1;
+    if (l_i <= this->n && this->cmp(this->data + l_i, &val) <= 0) {
+        int res = Heap_find(this, l_i, val);
+        if (res != -1) return res;
+    }
+    if (r_i <= this->n && this->cmp(this->data + r_i, &val) <= 0) {
+        int res = Heap_find(this, r_i, val);
+        if (res != -1) return res;
+    }
+    return -1;
+}
+int Heap_remove(Heap* this, Node val) {
+    int from = Heap_find(this, 1, val);
+    if (from == -1) return -1;
+    Node top_val = this->data[from];
+    this->data[from] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return 0;
+    Heap_sort_from_top(this, from);
+    return 0;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    Node* temp = this->data;
+    this->data = (Node*)malloc(sizeof(Node) * new_cap);
+    for (int i = 0; i < this->n; i++) this->data[i] = temp[i];
+    if (temp != NULL) free(temp);
+    return 0;
+}

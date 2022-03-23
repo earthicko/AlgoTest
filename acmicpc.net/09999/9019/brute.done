@@ -1,0 +1,50 @@
+#include <stdio.h>
+
+#define D_MAX 10000
+#define INF __INT32_MAX__
+
+int T, A, B;
+
+int D(int s);
+int S(int s);
+int L(int s);
+int R(int s);
+int (*funcs[4])(int) = {D, S, L, R};
+
+int min_d_s(int s, int e);
+
+int main() {
+    scanf("%d", &T);
+    for (int t = 0; t < T; t++) {
+        scanf("%d %d", &A, &B);
+        int start[4] = {A, L(A), L(L(A)), R(A)};
+        int end[4] = {B, L(B), L(L(B)), R(B)};
+        for (int s = 0; s < 4; s++) {
+            for (int e = 0; e < 4; e++) {
+                int min = min_d_s(start[s], end[e]);
+            }
+        }
+    }
+    return 0;
+}
+
+int min_d_s(int s, int e) {
+    //
+}
+
+int D(int s) { return (s * 2) % 10000; }
+int S(int s) {
+    s--;
+    if (s == -1) return 9999;
+    return s;
+}
+int L(int s) {
+    int top = s / 1000;
+    s = ((s * 10) % 10000) + top;
+    return s;
+}
+int R(int s) {
+    int bottom = s % 10;
+    s = (s / 10) + bottom * 1000;
+    return s;
+}

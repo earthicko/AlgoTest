@@ -1,0 +1,172 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 20
+#define INF __INT32_MAX__
+
+typedef struct Item {
+    int r, c, d;
+} Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int N;
+int MAP[N_MAX][N_MAX];
+int MIN_D[N_MAX][N_MAX];
+Item SHARK;
+int SIZE_SHARK = 2;
+int N_UNTIL_SIZE_ENC = 2;
+int TIME_ELAPSED = 0;
+Item dir[4] = {{-1, 0, 0}, {0, -1, 0}, {1, 0, 0}, {0, 1, 0}};
+
+int scan_map(Item s, Item* output, int* n_output);
+int cmp(const void* a, const void* b);
+
+int main() {
+    scanf("%d", &N);
+    for (int r = 0; r < N; r++) {
+        for (int c = 0; c < N; c++) {
+            scanf("%d", &MAP[r][c]);
+            if (MAP[r][c] == 9) {
+                SHARK.r = r;
+                SHARK.c = c;
+                SHARK.d = 0;
+                MAP[r][c] = 0;
+            }
+        }
+    }
+    while (1) {
+        Item* next_candidates = malloc(sizeof(Item) * N_MAX * N_MAX);
+        int n_candidates = 0;
+
+        scan_map(SHARK, next_candidates, &n_candidates);
+        if (n_candidates == 0) break;
+        qsort(next_candidates, n_candidates, sizeof(Item), cmp);
+
+        Item next = next_candidates[0];
+
+        TIME_ELAPSED += next.d;
+#ifndef ONLINE_JUDGE
+        printf("Move to %d %d in %d sec, total %d sec\n", next.r, next.c,
+               next.d, TIME_ELAPSED);
+#endif
+
+        N_UNTIL_SIZE_ENC--;
+        if (N_UNTIL_SIZE_ENC == 0) {
+            SIZE_SHARK++;
+            N_UNTIL_SIZE_ENC = SIZE_SHARK;
+#ifndef ONLINE_JUDGE
+            printf("Shark grow to %d\n", SIZE_SHARK);
+#endif
+        }
+
+        SHARK.r = next.r;
+        SHARK.c = next.c;
+#ifndef ONLINE_JUDGE
+        MAP[next.r][next.c] = 9;
+        for (int r = 0; r < N; r++) {
+            for (int c = 0; c < N; c++) printf("%d ", MAP[r][c]);
+            printf("\n");
+        }
+#endif
+        MAP[next.r][next.c] = 0;
+    }
+    printf("%d", TIME_ELAPSED);
+    return 0;
+}
+
+int scan_map(Item s, Item* output, int* n_output) {
+    int VISITED[N_MAX][N_MAX];
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++) {
+            MIN_D[i][j] = INF;
+            VISITED[i][j] = 0;
+        }
+    *n_output = 0;
+
+    Queue* q = Queue__init__(N_MAX * N_MAX + 2);
+    Queue_push(q, s);
+    MIN_D[s.r][s.c] = 0;
+    VISITED[s.r][s.c] = 1;
+    int min_d = INF;
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+        for (int i = 0; i < 4; i++) {
+            Item there = {here.r + dir[i].r, here.c + dir[i].c, here.d + 1};
+            if (there.r < 0 || there.r >= N || there.c < 0 || there.c >= N)
+                continue;
+            if (MAP[there.r][there.c] > SIZE_SHARK) continue;
+            if (VISITED[there.r][there.c]) continue;
+
+            if (0 < MAP[there.r][there.c] &&
+                MAP[there.r][there.c] < SIZE_SHARK) {
+                if (there.d > min_d) return 0;
+                if (min_d == INF) min_d = there.d;
+                output[*n_output] = there;
+                (*n_output)++;
+            }
+
+            VISITED[there.r][there.c] = 1;
+            MIN_D[there.r][there.c] = there.d;
+            Queue_push(q, there);
+        }
+    }
+    return 0;
+}
+
+int cmp(const void* a, const void* b) {
+    if (((Item*)a)->r > ((Item*)b)->r) return 1;
+    if (((Item*)a)->r == ((Item*)b)->r) {
+        if (((Item*)a)->c > ((Item*)b)->c) return 1;
+        if (((Item*)a)->c == ((Item*)b)->c) return 0;
+        return -1;
+    }
+    return -1;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}
