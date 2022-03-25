@@ -1,0 +1,95 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 100001
+#define INF __INT32_MAX__
+
+typedef int Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int N, K;
+int MIN_D[N_MAX], N_ROUTES[N_MAX];
+
+int do_bfs(int s, int e);
+
+int main() {
+    scanf("%d %d", &N, &K);
+    do_bfs(N, K);
+    printf("%d\n%d\n", MIN_D[K], N_ROUTES[K]);
+    return 0;
+}
+
+int do_bfs(int s, int e) {
+    for (int i = 0; i < N_MAX; i++) MIN_D[i] = INF;
+
+    MIN_D[s] = 0;
+    N_ROUTES[s] = 1;
+
+    Queue* q = Queue__init__(N_MAX);
+    Queue_push(q, s);
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+
+        Item there[3] = {here - 1, here + 1, 2 * here};
+        int new_d = MIN_D[here] + 1;
+
+        for (int i = 0; i < 3; i++) {
+            if (there[i] < 0 || there[i] >= N_MAX) continue;
+            if (MIN_D[there[i]] > new_d) {
+                MIN_D[there[i]] = new_d;
+                N_ROUTES[there[i]] = N_ROUTES[here];
+                Queue_push(q, there[i]);
+            } else if (MIN_D[there[i]] == new_d)
+                N_ROUTES[there[i]] += N_ROUTES[here];
+        }
+    }
+    Queue__del__(q);
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

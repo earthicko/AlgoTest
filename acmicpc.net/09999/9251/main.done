@@ -1,0 +1,34 @@
+#include <stdio.h>
+#include <string.h>
+#define N_MAX 1001
+
+int L_A, L_B;
+char A[N_MAX], B[N_MAX];
+int L_LCS[N_MAX][N_MAX];
+
+int get_len_lca(int i, int j);
+
+int main() {
+    scanf("%s", A);
+    scanf("%s", B);
+    L_A = strlen(A);
+    L_B = strlen(B);
+    for (int i = 1; i <= L_A; i++)
+        for (int j = 1; j <= L_B; j++) L_LCS[i][j] = -1;
+
+    printf("%d", get_len_lca(L_A, L_B));
+
+    return 0;
+}
+
+int get_len_lca(int i, int j) {
+    if (L_LCS[i][j] != -1) return L_LCS[i][j];
+    if (A[i - 1] == B[j - 1])
+        L_LCS[i][j] = get_len_lca(i - 1, j - 1) + 1;
+    else {
+        int left = get_len_lca(i - 1, j);
+        int right = get_len_lca(i, j - 1);
+        L_LCS[i][j] = (left > right) ? left : right;
+    }
+    return L_LCS[i][j];
+}

@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+#define N_MAX 15
+
+int COUNTER = 0;
+typedef struct chess {
+    int n;
+    int max_i;
+    int n_queen;
+    int plate[N_MAX];
+} chess;
+int get_max_n_queen(chess state, int cursor);
+
+int main() {
+    chess empty;
+    scanf("%d", &(empty.n));
+    empty.max_i = empty.n * empty.n;
+    empty.n_queen = 0;
+
+    for (int r = 0; r < empty.n; r++)empty.plate[r] = 0;
+
+    get_max_n_queen(empty, 0);
+    printf("%d", COUNTER);
+
+    return 0;
+}
+
+int get_max_n_queen(chess state, int cursor) {
+    if (state.n_queen == state.n) {
+        COUNTER++;
+        return 0;
+    }
+    for (int i = cursor; i < state.max_i; i++) {
+        int r = i / state.n;
+        int c = i % state.n;
+        if ((state.plate[r] & (1 << c)) == 0) {
+            chess new;
+            memcpy(&new, &state, sizeof(chess));
+            new.plate[r] = 0xFFFF;
+            int c_l = c - 1, c_r = c + 1;
+            for (int j = r - 1; j >= 0; j--) {
+                if (0 <= c_l && c_l < new.n) new.plate[j] |= (1 << c_l);
+                if (0 <= c_r && c_r < new.n) new.plate[j] |= (1 << c_r);
+                new.plate[j] |= (1 << c);
+                c_l--;
+                c_r++;
+            }
+            c_l = c - 1, c_r = c + 1;
+            for (int j = r + 1; j < new.n; j++) {
+                if (0 <= c_l && c_l < new.n) new.plate[j] |= (1 << c_l);
+                if (0 <= c_r && c_r < new.n) new.plate[j] |= (1 << c_r);
+                new.plate[j] |= (1 << c);
+                c_l--;
+                c_r++;
+            }
+            new.n_queen++;
+            get_max_n_queen(new, i);
+        }
+    }
+}
