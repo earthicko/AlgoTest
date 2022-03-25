@@ -1,0 +1,134 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef int Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int dir[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int N, M;
+int MAP[8][8];
+int N_SAFE_INITIAL = 0;
+int MIN_N_CONTAMINATED = 8 * 8;
+
+int place_wall_bfs(int i, int n_walls);
+
+int main() {
+    scanf("%d %d", &N, &M);
+    for (int n = 0; n < N; n++)
+        for (int m = 0; m < M; m++) {
+            scanf("%d", &MAP[n][m]);
+            if (MAP[n][m] == 0) N_SAFE_INITIAL++;
+        }
+
+    place_wall_bfs(0, 0);
+    printf("%d", N_SAFE_INITIAL - MIN_N_CONTAMINATED - 3);
+
+    return 0;
+}
+
+int count_contaminated_sectors() {
+    // printf("State: \n");
+    // for (int r = 0; r < N; r++) {
+    //     for (int c = 0; c < M; c++) printf("%d ", MAP[r][c]);
+    //     printf("\n");
+    // }
+    int map[8][8];
+    memcpy(map, MAP, sizeof(MAP));
+    Queue* q_r = Queue__init__(65);
+    Queue* q_c = Queue__init__(65);
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++)
+            if (map[r][c] == 2) {
+                Queue_push(q_r, r);
+                Queue_push(q_c, c);
+            }
+
+    int counter = 0;
+    while (q_r->n > 0) {
+        int c_r = Queue_pop(q_r);
+        int c_c = Queue_pop(q_c);
+        for (int i = 0; i < 4; i++) {
+            int n_r = c_r + dir[i][0];
+            int n_c = c_c + dir[i][1];
+            if (n_r < 0 || n_r >= N || n_c < 0 || n_c >= M) continue;
+            if (map[n_r][n_c] == 2 || map[n_r][n_c] == 1) continue;
+            map[n_r][n_c] = 2;
+            counter++;
+            Queue_push(q_r, n_r);
+            Queue_push(q_c, n_c);
+        }
+    }
+    Queue__del__(q_r);
+    Queue__del__(q_c);
+    return counter;
+}
+
+int place_wall_bfs(int i, int n_walls) {
+    n_walls++;
+    while (i < N * M) {
+        int r = i / M, c = i % M;
+        if (MAP[r][c] == 0) {
+            MAP[r][c] = 1;
+            if (n_walls == 3) {
+                int n_contaminated = count_contaminated_sectors();
+                // printf("Safe %d sectors\n", n_contaminated);
+                if (MIN_N_CONTAMINATED > n_contaminated)
+                    MIN_N_CONTAMINATED = n_contaminated;
+            } else
+                place_wall_bfs(i + 1, n_walls);
+            MAP[r][c] = 0;
+        }
+        i++;
+    }
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

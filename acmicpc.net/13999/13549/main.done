@@ -1,0 +1,109 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define INF __INT32_MAX__
+#define N_MAX 100001
+
+typedef int Item;
+typedef struct Deque {
+    int n, cap, head;
+    Item* items;
+} Deque;
+Deque* Deque__init__(int cap_);
+int Deque__del__(Deque* this);
+int Deque_push_back(Deque* this, Item item);
+int Deque_push_front(Deque* this, Item item);
+Item Deque_pop_front(Deque* this);
+Item Deque_pop_back(Deque* this);
+int Deque_resize(Deque* this, int cap_);
+
+int N, K;
+int MIN_D[N_MAX], VISITED[N_MAX];
+
+int main() {
+    scanf("%d %d", &N, &K);
+
+    for (int i = 0; i < N_MAX; i++) MIN_D[i] = INF;
+    MIN_D[N] = 0;
+
+    Deque* q = Deque__init__(N_MAX);
+    Deque_push_back(q, N);
+
+    while (q->n > 0) {
+        Item here = Deque_pop_front(q);
+        if (here == K) break;
+        Item there[3] = {here - 1, here + 1, here * 2};
+        int cost[3] = {1, 1, 0};
+        for (int i = 0; i < 3; i++) {
+            if (there[i] < 0 || there[i] >= N_MAX) continue;
+            if (VISITED[there[i]]) continue;
+            int new_d = MIN_D[here] + cost[i];
+            if (new_d < MIN_D[there[i]]) {
+                MIN_D[there[i]] = new_d;
+                if (cost[i] == 0)
+                    Deque_push_front(q, there[i]);
+                else
+                    Deque_push_back(q, there[i]);
+            }
+        }
+        VISITED[here] = 1;
+    }
+    printf("%d", MIN_D[K]);
+
+    return 0;
+}
+
+Deque* Deque__init__(int cap_) {
+    Deque* deque = (Deque*)malloc(sizeof(Deque));
+    deque->n = 0;
+    deque->cap = cap_;
+    deque->head = 0;
+    deque->items = (Item*)malloc(sizeof(Item) * cap_);
+    return deque;
+}
+int Deque__del__(Deque* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Deque_push_front(Deque* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Deque_resize(this, this->cap * 2);
+    this->n++;
+    this->items[this->head] = item;
+    this->head--;
+    if (this->head < 0) this->head = this->cap - 1;
+    return 0;
+}
+int Deque_push_back(Deque* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Deque_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Deque_pop_front(Deque* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+Item Deque_pop_back(Deque* this) {
+    assert(this->n > 0);
+    Item out = this->items[(this->head + this->n) % this->cap];
+    this->n--;
+    return out;
+}
+int Deque_resize(Deque* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}
