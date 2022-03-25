@@ -5,16 +5,18 @@ typedef int Item;
 typedef struct Deque {
     int n, cap, head;
     Item* items;
-    int (*push)(struct Deque*, Item);
-    Item (*pop_head)(struct Deque*);
-    Item (*pop_tail)(struct Deque*);
+    int (*push_front)(struct Deque*, Item);
+    int (*push_back)(struct Deque*, Item);
+    Item (*pop_front)(struct Deque*);
+    Item (*pop_back)(struct Deque*);
     Item (*peek)(struct Deque*);
 } Deque;
 Deque* Deque__init__(int cap_);
 int Deque__del__(Deque* this);
-int Deque_push(Deque* this, Item item);
-Item Deque_pop_head(Deque* this);
-Item Deque_pop_tail(Deque* this);
+int Deque_push_back(Deque* this, Item item);
+int Deque_push_front(Deque* this, Item item);
+Item Deque_pop_front(Deque* this);
+Item Deque_pop_back(Deque* this);
 Item Deque_peek(Deque* this, int i);
 int Deque_resize(Deque* this, int cap_);
 
@@ -24,9 +26,10 @@ Deque* Deque__init__(int cap_) {
     deque->cap = cap_;
     deque->head = 0;
     deque->items = (Item*)malloc(sizeof(Item) * cap_);
-    deque->push = Deque_push;
-    deque->pop_head = Deque_pop_head;
-    deque->pop_tail = Deque_pop_head;
+    deque->push_front = Deque_push_front;
+    deque->push_back = Deque_push_back;
+    deque->pop_front = Deque_pop_front;
+    deque->pop_back = Deque_pop_front;
     deque->peek = Deque_peek;
     return deque;
 }
@@ -35,20 +38,29 @@ int Deque__del__(Deque* this) {
     free(this);
     return 0;
 }
-int Deque_push(Deque* this, Item item) {
+int Deque_push_front(Deque* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Deque_resize(this, this->cap * 2);
+    this->n++;
+    this->items[this->head] = item;
+    this->head--;
+    if (this->head < 0) this->head = this->cap - 1;
+    return 0;
+}
+int Deque_push_back(Deque* this, Item item) {
     // assert(this->n < this->cap);
     if (this->n == this->cap) Deque_resize(this, this->cap * 2);
     this->n++;
     this->items[(this->head + this->n) % this->cap] = item;
     return 0;
 }
-Item Deque_pop_head(Deque* this) {
+Item Deque_pop_front(Deque* this) {
     assert(this->n > 0);
     this->head = (this->head + 1) % this->cap;
     this->n--;
     return this->items[this->head];
 }
-Item Deque_pop_tail(Deque* this) {
+Item Deque_pop_back(Deque* this) {
     assert(this->n > 0);
     Item out = this->items[(this->head + this->n) % this->cap];
     this->n--;
