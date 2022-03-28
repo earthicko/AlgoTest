@@ -1,0 +1,55 @@
+#include <stdio.h>
+#define N_MAX 100000
+#define min(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a < _b ? _a : _b;      \
+    })
+#define max(a, b)               \
+    ({                          \
+        __typeof__(a) _a = (a); \
+        __typeof__(b) _b = (b); \
+        _a > _b ? _a : _b;      \
+    })
+
+int MAX_SCORE[3], MIN_SCORE[3], SCORE[3];
+int N;
+
+int main() {
+    scanf("%d", &N);
+    for (int j = 0; j < 3; j++) scanf("%d", &SCORE[j]);
+    MAX_SCORE[0] = SCORE[0];
+    MAX_SCORE[1] = SCORE[1];
+    MAX_SCORE[2] = SCORE[2];
+    MIN_SCORE[0] = SCORE[0];
+    MIN_SCORE[1] = SCORE[1];
+    MIN_SCORE[2] = SCORE[2];
+    for (int i = 1; i < N; i++) {
+        for (int j = 0; j < 3; j++) scanf("%d", &SCORE[j]);
+        int new_score[3];
+        new_score[0] = max(MAX_SCORE[0], MAX_SCORE[1]);
+        new_score[1] = max(MAX_SCORE[0], MAX_SCORE[1]);
+        new_score[1] = max(new_score[1], MAX_SCORE[2]);
+        new_score[2] = max(MAX_SCORE[1], MAX_SCORE[2]);
+
+        MAX_SCORE[0] = new_score[0] + SCORE[0];
+        MAX_SCORE[1] = new_score[1] + SCORE[1];
+        MAX_SCORE[2] = new_score[2] + SCORE[2];
+
+        new_score[0] = min(MIN_SCORE[0], MIN_SCORE[1]);
+        new_score[1] = min(MIN_SCORE[0], MIN_SCORE[1]);
+        new_score[1] = min(new_score[1], MIN_SCORE[2]);
+        new_score[2] = min(MIN_SCORE[1], MIN_SCORE[2]);
+
+        MIN_SCORE[0] = new_score[0] + SCORE[0];
+        MIN_SCORE[1] = new_score[1] + SCORE[1];
+        MIN_SCORE[2] = new_score[2] + SCORE[2];
+    }
+    int max_score = max(MAX_SCORE[0], MAX_SCORE[1]);
+    max_score = max(max_score, MAX_SCORE[2]);
+    int min_score = min(MIN_SCORE[0], MIN_SCORE[1]);
+    min_score = min(min_score, MIN_SCORE[2]);
+    printf("%d %d", max_score, min_score);
+    return 0;
+}
