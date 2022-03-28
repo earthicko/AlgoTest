@@ -1,0 +1,94 @@
+#include <stdio.h>
+#define N_MAX 16
+int N;
+int MAP[N_MAX][N_MAX];
+int COUNTER;
+int do_dfs(int state, int r, int c);
+
+int main() {
+    scanf("%d", &N);
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < N; c++) scanf("%d", &MAP[r][c]);
+    do_dfs(0, 0, 1);
+    printf("%d", COUNTER);
+    return 0;
+}
+
+int is_clear(int n_clear, int clear[][2]) {
+    for (int i = 0; i < n_clear; i++) {
+        if (clear[i][0] >= N || clear[i][1] >= N) return 0;
+        if (MAP[clear[i][0]][clear[i][1]]) return 0;
+    }
+    return 1;
+}
+
+int do_dfs(int state, int r, int c) {
+    if (r == N - 1 && c == N - 1) {
+        COUNTER++;
+        return 0;
+    }
+    int need_trying[3];
+
+    int nr, nc;
+    int n_clear;
+    int clear[3][2];
+    switch (state) {
+        case 0:  // 가로
+            need_trying[0] = 1;
+            need_trying[1] = 0;
+            need_trying[2] = 1;
+            break;
+        case 1:  // 세로
+            need_trying[0] = 0;
+            need_trying[1] = 1;
+            need_trying[2] = 1;
+            break;
+        case 2:  // 대각
+            need_trying[0] = 1;
+            need_trying[1] = 1;
+            need_trying[2] = 1;
+            break;
+
+        default:
+            break;
+    }
+    for (int i = 0; i < 3; i++) {
+        if (need_trying[i]) {
+            switch (i) {
+                case 0:
+                    // 우측 가로 진행
+                    nr = r;
+                    nc = c + 1;
+                    n_clear = 1;
+                    clear[0][0] = nr;
+                    clear[0][1] = nc;
+                    if (is_clear(n_clear, clear)) do_dfs(0, nr, nc);
+                    break;
+                case 1:
+                    nr = r + 1;
+                    nc = c;
+                    n_clear = 1;
+                    clear[0][0] = nr;
+                    clear[0][1] = nc;
+                    if (is_clear(n_clear, clear)) do_dfs(1, nr, nc);
+                    break;
+                case 2:
+                    // 우하측 대각 진행
+                    nr = r + 1;
+                    nc = c + 1;
+                    n_clear = 3;
+                    clear[0][0] = r;
+                    clear[0][1] = nc;
+                    clear[1][0] = nr;
+                    clear[1][1] = nc;
+                    clear[2][0] = nr;
+                    clear[2][1] = c;
+                    if (is_clear(n_clear, clear)) do_dfs(2, nr, nc);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    return 0;
+}

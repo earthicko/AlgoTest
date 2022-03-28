@@ -1,0 +1,43 @@
+#include <stdio.h>
+#define N_MAX 1000
+
+int N, M;
+int MAP[N_MAX][N_MAX];
+int VISITED[N_MAX][N_MAX];
+int MIN_D = __INT32_MAX__;
+int dir[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int do_dfs(int r, int c, int sum_d, int allowed_wall_breaks);
+
+int main() {
+    scanf("%d %d", &N, &M);
+    MIN_D = N * M + 1;
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) scanf("%1d", &MAP[r][c]);
+    do_dfs(0, 0, 1, 1);
+    if (MIN_D == __INT32_MAX__)
+        printf("-1");
+    else
+        printf("%d", MIN_D);
+    return 0;
+}
+
+int do_dfs(int r, int c, int sum_d, int allowed_wall_breaks) {
+    if (r == N - 1 && c == M - 1) {
+        if (MIN_D > sum_d) MIN_D = sum_d;
+        return 0;
+    }
+    if (sum_d >= MIN_D) return -1;
+    VISITED[r][c] = 1;
+    for (int i = 0; i < 4; i++) {
+        int nr = r + dir[i][0];
+        int nc = c + dir[i][1];
+        if (nr < 0 || nr >= N || nc < 0 || nc >= M) continue;
+        if (VISITED[nr][nc]) continue;
+        if (MAP[nr][nc] == 1 && allowed_wall_breaks > 0)
+            do_dfs(nr, nc, sum_d + 1, allowed_wall_breaks - 1);
+        if (MAP[nr][nc] == 0) do_dfs(nr, nc, sum_d + 1, allowed_wall_breaks);
+    }
+    VISITED[r][c] = 0;
+    return 0;
+}

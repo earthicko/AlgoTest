@@ -1,0 +1,122 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 1000
+#define INF __INT32_MAX__
+
+typedef struct Item {
+    int r, c;
+} Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int N, M;
+int MAP[N_MAX][N_MAX];
+int VISITED[N_MAX][N_MAX];
+int MIN_D[N_MAX][N_MAX];
+int ALLOWED_WALL_BREAKS[N_MAX][N_MAX];
+Item dir[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int main() {
+    scanf("%d %d", &N, &M);
+    for (int r = 0; r < N; r++) {
+        for (int c = 0; c < M; c++) {
+            scanf("%1d", &MAP[r][c]);
+            MIN_D[r][c] = INF;
+            ALLOWED_WALL_BREAKS[r][c] = 1;
+        }
+    }
+    Queue* q = Queue__init__(N * M + 2);
+    Item start = {0, 0};
+    MIN_D[0][0] = 0;
+
+    VISITED[0][0] = 1;
+    Queue_push(q, start);
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+        for (int i = 0; i < 4; i++) {
+            Item there = {here.r + dir[i].r, here.c + dir[i].c};
+            if (there.r < 0 || there.r >= N || there.c < 0 || there.c >= M)
+                continue;
+            if (VISITED[there.r][there.c]) continue;
+            if (MAP[there.r][there.c] == 1 &&
+                ALLOWED_WALL_BREAKS[here.r][here.c] == 0)
+                continue;
+            printf("Visit (%d, %d)\n", there.r, there.c);
+            VISITED[there.r][there.c] = 1;
+            if (MAP[there.r][there.c] == 1) {
+                ALLOWED_WALL_BREAKS[there.r][there.c] =
+                    ALLOWED_WALL_BREAKS[here.r][here.c] - 1;
+                printf("Break wall at (%d, %d)\n", there.r, there.c);
+            }
+            MIN_D[there.r][there.c] = MIN_D[here.r][here.c] + 1;
+            Queue_push(q, there);
+        }
+        // VISITED[here.r][here.c] = 1;
+    }
+
+    printf("Break wall map\n");
+    for (int r = 0; r < N; r++) {
+        for (int c = 0; c < M; c++) printf("%d ", ALLOWED_WALL_BREAKS[r][c]);
+        printf("\n");
+    }
+    printf("Distance map\n");
+    for (int r = 0; r < N; r++) {
+        for (int c = 0; c < M; c++) printf("%d ", MIN_D[r][c]);
+        printf("\n");
+    }
+
+    Queue__del__(q);
+    if (MIN_D[N - 1][M - 1] == INF)
+        printf("-1");
+    else
+        printf("%d", MIN_D[N - 1][M - 1]);
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

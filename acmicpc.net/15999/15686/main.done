@@ -1,0 +1,97 @@
+#include <stdio.h>
+
+#define N_MAX 50
+#define M_MAX 13
+
+int N, M;
+int MAP[N_MAX][N_MAX];
+int D[N_MAX][N_MAX][N_MAX][N_MAX];
+int N_HOUSE;
+int COORD_HOUSE[N_MAX * N_MAX][2];
+int N_CHICKEN;
+int COORD_CHICKEN[N_MAX * N_MAX][2];
+int CHOICE[M_MAX];
+int MIN_D[N_MAX * N_MAX];
+int MIN_SUM_D = __INT32_MAX__;
+
+int build_map();
+int make_choice(int i, int n);
+
+int main() {
+    scanf("%d %d", &N, &M);
+
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < N; c++) {
+            scanf("%d", &MAP[r][c]);
+            if (MAP[r][c] == 1) {
+                COORD_HOUSE[N_HOUSE][0] = r;
+                COORD_HOUSE[N_HOUSE][1] = c;
+                N_HOUSE++;
+            }
+            if (MAP[r][c] == 2) {
+                COORD_CHICKEN[N_CHICKEN][0] = r;
+                COORD_CHICKEN[N_CHICKEN][1] = c;
+                N_CHICKEN++;
+            }
+        }
+    build_map();
+
+    make_choice(0, 0);
+
+    printf("%d", MIN_SUM_D);
+
+    return 0;
+}
+
+int update_min_dist(int i_chicken) {
+    for (int i = 0; i < N_HOUSE; i++) {
+        int d = D[COORD_HOUSE[i][0]][COORD_HOUSE[i][1]]
+                 [COORD_CHICKEN[i_chicken][0]][COORD_CHICKEN[i_chicken][1]];
+        if (d < MIN_D[i]) MIN_D[i] = d;
+    }
+
+    return 0;
+}
+
+int cal_sum_dist() {
+    for (int i = 0; i < N_HOUSE; i++) MIN_D[i] = __INT32_MAX__;
+    for (int i = 0; i < N_CHICKEN; i++)
+        if (CHOICE[i]) update_min_dist(i);
+    int sum = 0;
+    for (int i = 0; i < N_HOUSE; i++) sum += MIN_D[i];
+
+    return sum;
+}
+
+int make_choice(int i, int n) {
+    if (n == M) {
+        // printf("Choice: ");
+        // for (int idx = 0; idx < N_CHICKEN; idx++) printf("%d ", CHOICE[idx]);
+        // printf("\n");
+        int dist = cal_sum_dist();
+        if (dist < MIN_SUM_D) MIN_SUM_D = dist;
+        return 0;
+    }
+    n++;
+    for (int idx = i; idx < N_CHICKEN; idx++) {
+        CHOICE[idx] = 1;
+        make_choice(idx + 1, n);
+        CHOICE[idx] = 0;
+    }
+    return 0;
+}
+
+int build_map() {
+    for (int r_s = 0; r_s < N; r_s++)
+        for (int c_s = 0; c_s < N; c_s++)
+            for (int r_e = 0; r_e < N; r_e++)
+                for (int c_e = 0; c_e < N; c_e++) {
+                    int d_x = r_e - r_s;
+                    int d_y = c_e - c_s;
+                    if (d_x < 0) d_x = -d_x;
+                    if (d_y < 0) d_y = -d_y;
+                    D[r_s][c_s][r_e][c_e] = d_x + d_y;
+                }
+
+    return 0;
+}
