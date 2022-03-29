@@ -1,0 +1,100 @@
+#include <stdio.h>
+
+#define SIZE_MAX 50
+
+int R, C, T;
+int PURIFIER_LOC[2][2] = {{-1, 0}, {-1, 0}};
+int DIR[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int MAP[SIZE_MAX][SIZE_MAX];
+
+int simulate_diffusion();
+int activate_purifier();
+
+int print_map() {
+    for (int r = 0; r < R; r++) {
+        for (int c = 0; c < C; c++) {
+            if (MAP[r][c])
+                printf("%2d ", MAP[r][c]);
+            else
+                printf("   ");
+        }
+        printf("\n");
+    }
+    return 0;
+}
+
+int main() {
+    scanf("%d%d%d", &R, &C, &T);
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++) {
+            scanf("%d", &MAP[r][c]);
+            if (MAP[r][c] == -1) {
+                if (PURIFIER_LOC[0][0] == -1)
+                    PURIFIER_LOC[0][0] = r;
+                else
+                    PURIFIER_LOC[1][0] = r;
+            }
+        }
+    for (int t = 0; t < T; t++) {
+        simulate_diffusion();
+        // printf("After diffusion:\n");
+        // print_map();
+        activate_purifier();
+        // printf("After purification:\n");
+        // print_map();
+    }
+
+    int sum_dust = 0;
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++)
+            if (MAP[r][c] != -1) sum_dust += MAP[r][c];
+
+    printf("%d", sum_dust);
+
+    return 0;
+}
+
+int simulate_diffusion() {
+    int diffused[SIZE_MAX][SIZE_MAX];
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++) diffused[r][c] = 0;
+
+    for (int r = 0; r < R; r++) {
+        for (int c = 0; c < C; c++) {
+            int n_diffusable = 0;
+            int amount_diffused = MAP[r][c] / 5;
+            for (int i = 0; i < 4; i++) {
+                int nr = r + DIR[i][0], nc = c + DIR[i][1];
+
+                if (nr < 0 || nr >= R || nc < 0 || nc >= C) continue;
+                if (nr == PURIFIER_LOC[0][0] && nc == PURIFIER_LOC[0][1])
+                    continue;
+                if (nr == PURIFIER_LOC[1][0] && nc == PURIFIER_LOC[1][1])
+                    continue;
+
+                n_diffusable++;
+                diffused[nr][nc] += amount_diffused;
+            }
+            MAP[r][c] -= amount_diffused * n_diffusable;
+        }
+    }
+    for (int r = 0; r < R; r++)
+        for (int c = 0; c < C; c++) MAP[r][c] += diffused[r][c];
+    return 0;
+}
+int activate_purifier() {
+    int r0 = PURIFIER_LOC[0][0];  // 2
+    int r1 = PURIFIER_LOC[1][0];  // 3
+    for (int r = r0 - 1; r >= 1; r--) MAP[r][0] = MAP[r - 1][0];
+    for (int c = 0; c < C - 1; c++) MAP[0][c] = MAP[0][c + 1];
+    for (int r = 0; r < r0; r++) MAP[r][C - 1] = MAP[r + 1][C - 1];
+    for (int c = C - 1; c >= 2; c--) MAP[r0][c] = MAP[r0][c - 1];
+    MAP[r0][1] = 0;
+    for (int r = r1 + 1; r < R - 1; r++) MAP[r][0] = MAP[r + 1][0];
+    for (int c = 0; c < C - 1; c++) MAP[R - 1][c] = MAP[R - 1][c + 1];
+    for (int r = R - 1; r >= r1 + 1; r--) MAP[r][C - 1] = MAP[r - 1][C - 1];
+    for (int c = C - 1; c >= 2; c--) MAP[r1][c] = MAP[r1][c - 1];
+    MAP[r1][1] = 0;
+    return 0;
+}

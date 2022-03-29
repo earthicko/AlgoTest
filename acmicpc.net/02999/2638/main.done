@@ -1,0 +1,143 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Item {
+    int r, c;
+} Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+#define N_MAX 100
+
+int N, M;
+int MAP[N_MAX][N_MAX];
+Item dir[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int count_remaining();
+int cycle();
+
+int main() {
+    scanf("%d %d", &N, &M);
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) scanf("%d", &MAP[r][c]);
+
+    int time = 0;
+    while (count_remaining()) {
+        cycle();
+        time++;
+    }
+
+    printf("%d", time);
+
+    return 0;
+}
+
+// int print_map(int arr[][N_MAX]) {
+//     for (int r = 0; r < N; r++) {
+//         for (int c = 0; c < M; c++) printf("%d ", arr[r][c]);
+//         printf("\n");
+//     }
+//     return 0;
+// }
+
+int count_remaining() {
+    int counter = 0;
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++)
+            if (MAP[r][c]) counter++;
+    return counter;
+}
+
+int cycle() {
+    // printf("Start cycle\n");
+    // print_map(MAP);
+
+    int N_EXPOSED[N_MAX][N_MAX], VISITED[N_MAX][N_MAX];
+
+    Item start;
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) {
+            N_EXPOSED[r][c] = 0;
+            VISITED[r][c] = 0;
+            if (MAP[r][c] == 0) {
+                start.r = r;
+                start.c = c;
+            }
+        }
+
+    Queue* q = Queue__init__(N * M + 2);
+    Queue_push(q, start);
+
+    while (q->n > 0) {
+        Item h = Queue_pop(q);
+        if (VISITED[h.r][h.c]) continue;
+        for (int i = 0; i < 4; i++) {
+            Item t = {h.r + dir[i].r, h.c + dir[i].c};
+            if (t.r < 0 || t.r >= N || t.c < 0 || t.c >= M) continue;
+            if (MAP[t.r][t.c] == 1) N_EXPOSED[t.r][t.c]++;
+            if (MAP[t.r][t.c] == 0 && (VISITED[t.r][t.c] == 0))
+                Queue_push(q, t);
+        }
+        VISITED[h.r][h.c] = 1;
+    }
+    // printf("Number exposed\n");
+    // print_map(N_EXPOSED);
+    // printf("Visited\n");
+    // print_map(VISITED);
+
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++)
+            if (N_EXPOSED[r][c] >= 2) MAP[r][c] = 0;
+    
+    // printf("After cycle\n");
+    // print_map(MAP);
+
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}

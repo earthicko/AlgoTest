@@ -1,0 +1,47 @@
+#include <stdio.h>
+#define N_MAX 1002
+
+int main() {
+    int L_ARR;
+    scanf("%d", &L_ARR);
+    int ARR[N_MAX];
+    ARR[0] = 0, ARR[L_ARR + 1] = 0;
+    for (int i = 1; i <= L_ARR; i++) scanf("%d", &ARR[i]);
+
+    int L_LIS_AT[N_MAX];      // Longest Increasing Sequence
+    int LIS_ENDSWITH[N_MAX];  // Last value of LIS
+    L_LIS_AT[0] = 0, LIS_ENDSWITH[0] = 0;
+    for (int i = 1; i <= L_ARR; i++) LIS_ENDSWITH[i] = N_MAX;
+    int L_LDS_AT[N_MAX];  // Longest Decreasing Sequence
+    int LDS_ENDSWITH[N_MAX];
+    L_LDS_AT[L_ARR + 1] = 0, LDS_ENDSWITH[L_ARR + 1] = 0;
+    for (int i = 1; i <= L_ARR; i++) LDS_ENDSWITH[i] = N_MAX;
+
+    for (int i = 1; i <= L_ARR; i++) {
+        for (int j = 1; j <= L_ARR; j++) {
+            if (LIS_ENDSWITH[j - 1] < ARR[i] && ARR[i] <= LIS_ENDSWITH[j]) {
+                LIS_ENDSWITH[j] = ARR[i];
+                L_LIS_AT[i] = j;
+                break;
+            }
+        }
+    }
+    for (int i = L_ARR; i >= 0; i--) {
+        for (int j = L_ARR; j >= 0; j--) {
+            if (LDS_ENDSWITH[j] >= ARR[i] && ARR[i] > LDS_ENDSWITH[j + 1]) {
+                LDS_ENDSWITH[j] = ARR[i];
+                L_LDS_AT[i] = L_ARR - j + 1;
+                break;
+            }
+        }
+    }
+
+    int max_l_bitonic = 0;
+    for (int i = 1; i <= L_ARR; i++) {
+        int l_bitonic = L_LIS_AT[i] + L_LDS_AT[i] - 1;
+        if (l_bitonic > max_l_bitonic) max_l_bitonic = l_bitonic;
+    }
+
+    printf("%d", max_l_bitonic);
+    return 0;
+}

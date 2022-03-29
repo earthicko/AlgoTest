@@ -1,0 +1,51 @@
+#include <stdio.h>
+
+#define N_MAX 100
+#define L_MAX 15
+
+const int D_MAX = (N_MAX + 1) * L_MAX + 1;
+
+int N, M, R;
+int N_ITEMS[N_MAX];
+int MIN_D[N_MAX][N_MAX];
+
+int cal_max_items(int from);
+
+int main() {
+    scanf("%d%d%d", &N, &M, &R);
+    for (int s = 0; s < N; s++)
+        for (int e = 0; e < N; e++)
+            if (s != e) MIN_D[s][e] = D_MAX;
+
+    for (int n = 0; n < N; n++) scanf("%d", &N_ITEMS[n]);
+    for (int r = 0; r < R; r++) {
+        int s, e, d;
+        scanf("%d%d%d", &s, &e, &d);
+        s--, e--;
+        MIN_D[s][e] = d;
+        MIN_D[e][s] = d;
+    }
+
+    for (int m = 0; m < N; m++)
+        for (int s = 0; s < N; s++)
+            for (int e = 0; e < N; e++) {
+                int new_d = MIN_D[s][m] + MIN_D[m][e];
+                if (new_d < MIN_D[s][e]) MIN_D[s][e] = new_d;
+            }
+
+    int max_n_items = 0;
+    for (int from = 0; from < N; from++) {
+        int n_items = cal_max_items(from);
+        if (max_n_items < n_items) max_n_items = n_items;
+    }
+    printf("%d", max_n_items);
+
+    return 0;
+}
+
+int cal_max_items(int from) {
+    int sum_n_items = 0;
+    for (int e = 0; e < N; e++)
+        if (MIN_D[from][e] <= M) sum_n_items += N_ITEMS[e];
+    return sum_n_items;
+}
