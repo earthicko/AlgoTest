@@ -1,0 +1,89 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef char Item;
+typedef struct Stack {
+    int n, cap;
+    Item* items;
+} Stack;
+Stack* Stack__init__(int cap_);
+int Stack__del__(Stack* del);
+int Stack_resize(Stack* this, int cap_);
+int Stack_push(Stack* this, Item new);
+Item Stack_pop(Stack* this);
+Item Stack_peek(Stack* this);
+
+#define L_MAX 1000001
+#define L_BOMB_MAX 37
+
+int L_TEXT, L_BOMB;
+char TEXT[L_MAX], BOMB[L_BOMB_MAX];
+char CATALYST;
+
+int check(Stack* s);
+
+int main() {
+    scanf("%s", TEXT);
+    scanf("%s", BOMB);
+    L_TEXT = strlen(TEXT);
+    L_BOMB = strlen(BOMB);
+    CATALYST = BOMB[L_BOMB - 1];
+
+    Stack* s = Stack__init__(L_TEXT + 1);
+    for (int i = 0; i < L_TEXT; i++) {
+        Stack_push(s, TEXT[i]);
+        if (check(s))
+            for (int cnt = 0; cnt < L_BOMB; cnt++) Stack_pop(s);
+    }
+    for (int i = 0; i < s->n; i++) printf("%c", s->items[i]);
+    if (s->n == 0) printf("FRULA");
+    return 0;
+}
+
+int check(Stack* s) {
+    if (s->n < L_BOMB) return 0;
+
+    int cursor = s->n - 1, bomb_cursor = L_BOMB - 1;
+    while (cursor >= 0 && bomb_cursor >= 0) {
+        if (s->items[cursor] != BOMB[bomb_cursor]) return 0;
+        cursor--, bomb_cursor--;
+    }
+    return 1;
+}
+
+Stack* Stack__init__(int cap_) {
+    Stack* new = (Stack*)malloc(sizeof(Stack));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int Stack__del__(Stack* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int Stack_resize(Stack* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    int copy_max = (this->n < cap_) ? this->n : cap_;
+    for (int i = 0; i < copy_max; i++) this->items[i] = temp[i];
+    free(temp);
+    return 0;
+}
+int Stack_push(Stack* this, Item new) {
+    if (this->n == this->cap) Stack_resize(this, this->cap * 2);
+    this->items[this->n++] = new;
+    return 0;
+}
+Item Stack_pop(Stack* this) {
+    assert(this->n > 0);
+    Item output = this->items[this->n-- - 1];
+    return output;
+}
+Item Stack_peek(Stack* this) {
+    assert(this->n > 0);
+    return this->items[this->n - 1];
+}
