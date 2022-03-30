@@ -1,0 +1,48 @@
+#include <stdio.h>
+#define N_MAX 1000
+#define T_MAX 100
+
+const int INF = __INT32_MAX__;
+// const int D_MAX = (N_MAX + 1) * T_MAX + 1;
+int N, M, X;
+int EDGE[N_MAX][N_MAX];
+
+int main() {
+    scanf("%d%d%d", &N, &M, &X);
+    X--;
+
+    for (int s = 0; s < N; s++)
+        for (int e = 0; e < N; e++) {
+            if (s == e)
+                EDGE[s][e] = 0;
+            else
+                EDGE[s][e] = INF;
+        }
+
+    for (int m = 0; m < M; m++) {
+        int s, e, d;
+        scanf("%d%d%d", &s, &e, &d);
+        s--, e--;
+        EDGE[s][e] = d;
+    }
+
+    for (int m = 0; m < N; m++)
+        for (int s = 0; s < N; s++)
+            for (int e = 0; e < N; e++) {
+                int new_d;
+                if (EDGE[s][m] == INF || EDGE[m][e] == INF)
+                    new_d = INF;
+                else
+                    new_d = EDGE[s][m] + EDGE[m][e];
+                if (EDGE[s][e] > new_d) EDGE[s][e] = new_d;
+            }
+
+    int max_round_time = 0;
+    for (int i = 0; i < N; i++) {
+        int round_time = EDGE[i][X] + EDGE[X][i];
+        if (max_round_time < round_time) max_round_time = round_time;
+    }
+    printf("%d", max_round_time);
+
+    return 0;
+}

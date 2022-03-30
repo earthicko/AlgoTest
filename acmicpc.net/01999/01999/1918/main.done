@@ -1,0 +1,136 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef char Item;
+typedef struct Stack {
+    int n, cap;
+    Item* items;
+} Stack;
+Stack* Stack__init__(int cap_);
+int Stack__del__(Stack* del);
+int Stack_resize(Stack* this, int cap_);
+int Stack_push(Stack* this, Item new);
+Item Stack_pop(Stack* this);
+Item Stack_peek(Stack* this);
+
+typedef struct List {
+    int n, cap;
+    Item* items;
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+
+#define L_MAX 100
+
+char EQ[L_MAX + 2 + 1];
+int L_EQ;
+
+int op_priority(char op);
+
+int main() {
+    EQ[0] = '(';
+    scanf("%s", EQ + 1);
+    L_EQ = strlen(EQ);
+    EQ[L_EQ] = ')';
+    L_EQ++;
+
+    Stack* s = Stack__init__(L_EQ);
+    List* result = List__init__(L_EQ);
+
+    for (int i = 0; i < L_EQ; i++) {
+        if (EQ[i] == '(') {
+            Stack_push(s, EQ[i]);
+        } else if ('*' <= EQ[i] && EQ[i] <= '/') {
+            while (op_priority(Stack_peek(s)) >= op_priority(EQ[i]))
+                List_append(result, Stack_pop(s));
+            Stack_push(s, EQ[i]);
+        } else if ('A' <= EQ[i] && EQ[i] <= 'Z') {
+            List_append(result, EQ[i]);
+        } else if (EQ[i] == ')') {
+            while (Stack_peek(s) != '(') List_append(result, Stack_pop(s));
+            Stack_pop(s);
+        }
+    }
+    for (int i = 0; i < result->n; i++) printf("%c", result->items[i]);
+    return 0;
+}
+
+int op_priority(char op) {
+    switch (op) {
+        case '+':
+            return 0;
+        case '-':
+            return 0;
+        case '*':
+            return 1;
+        case '/':
+            return 1;
+        default:
+            return -1;
+    }
+}
+
+Stack* Stack__init__(int cap_) {
+    Stack* new = (Stack*)malloc(sizeof(Stack));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int Stack__del__(Stack* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int Stack_resize(Stack* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    int copy_max = (this->n < cap_) ? this->n : cap_;
+    for (int i = 0; i < copy_max; i++) this->items[i] = temp[i];
+    free(temp);
+    return 0;
+}
+int Stack_push(Stack* this, Item new) {
+    if (this->n == this->cap) Stack_resize(this, this->cap * 2);
+    this->items[this->n++] = new;
+    return 0;
+}
+Item Stack_pop(Stack* this) {
+    assert(this->n > 0);
+    Item output = this->items[this->n-- - 1];
+    return output;
+}
+Item Stack_peek(Stack* this) {
+    assert(this->n > 0);
+    return this->items[this->n - 1];
+}
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}
