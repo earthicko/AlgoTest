@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef int Item;
+typedef struct List {
+    int n, cap;
+    Item* items;
+    int (*append)(struct List*, Item);
+} List;
+List* List__init__(int cap_);
+int List__del__(List* del);
+int List_resize(List* this, int cap_);
+int List_append(List* this, Item new);
+
+#define N_MAX 100001
+
+int IN[N_MAX], POST[N_MAX];
+int LEFT[N_MAX];
+int N;
+List* PRE;
+
+int find_preorder(int sp, int ep, int si, int ei);
+
+int main() {
+    scanf("%d", &N);
+    for (int i = 0; i < N; i++) scanf("%d", &IN[i]);
+    for (int i = 0; i < N; i++) scanf("%d", &POST[i]);
+    PRE = List__init__(N);
+
+    find_preorder(0, N - 1, 0, N - 1);
+
+    for (int i = 0; i < PRE->n; i++) printf("%d ", PRE->items[i]);
+    return 0;
+}
+
+// start_postorder, end_postorder, start_inorder, end_inorder
+int find_preorder(int sp, int ep, int si, int ei) {
+    if (sp == ep || si == ei) {
+        List_append(PRE, POST[ep]);
+        return 0;
+    }
+    if (sp > ep || si > ei) return -1;
+
+    List_append(PRE, POST[ep]);  // last element of POST is the root
+
+    int middle = -1;
+    for (int i = si; i <= ei; i++)
+        if (IN[i] == POST[ep]) {
+            middle = i;
+            LEFT[IN[i]] = 0;
+        } else {
+            if (middle == -1)
+                LEFT[IN[i]] = 1;
+            else
+                LEFT[IN[i]] = 0;
+        }  // mid: idx of root in IN, LEFT[val]=1 -> val is on left side of root
+
+    // left sp ... right ei
+    int lsp, lep, lsi, lei, rsp, rep, rsi, rei;
+    if (middle == si) {
+        lsp = sp, lep = sp - 1;
+        rsp = sp, rep = ep - 1;
+        lsi = si, lei = si - 1;
+        rsi = middle + 1, rei = ei;
+    } else if (middle == ei) {
+        lsp = sp, lep = ep - 1;
+        rsp = ep, rep = ep - 1;
+        lsi = si, lei = middle - 1;
+        rsi = ei + 1, rei = ei;
+    } else {
+        int i = sp;
+        while (LEFT[POST[i]]) i++;
+        lsp = sp, lep = i - 1;
+        rsp = i, rep = ep - 1;
+        lsi = si, lei = middle - 1;
+        rsi = middle + 1, rei = ei;
+    }
+    find_preorder(lsp, lep, lsi, lei);
+    find_preorder(rsp, rep, rsi, rei);
+    return 0;
+}
+
+List* List__init__(int cap_) {
+    List* new = (List*)malloc(sizeof(List));
+    new->n = 0;
+    new->cap = cap_;
+    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    new->append = List_append;
+    return new;
+}
+int List__del__(List* del) {
+    free(del->items);
+    free(del);
+    return 0;
+}
+int List_resize(List* this, int cap_) {
+    Item* temp = this->items;
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
+    free(temp);
+    this->cap = cap_;
+    return 0;
+}
+int List_append(List* this, Item new) {
+    if (this->n == this->cap) List_resize(this, this->cap * 2);
+    this->items[this->n] = new;
+    this->n++;
+    return 0;
+}
