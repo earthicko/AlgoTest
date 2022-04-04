@@ -1,0 +1,115 @@
+#include <stdio.h>
+
+#define N_MAX 100001
+
+const int INF = __INT32_MAX__;
+int FORCE[N_MAX][5][5];
+
+int get_score(int from, int to);
+
+int main() {
+    for (int i = 0; i <= 4; i++)
+        for (int j = 0; j <= 4; j++) FORCE[0][i][j] = INF;
+    FORCE[0][0][0] = 0;
+    int n = 1;
+    while (1) {
+        int new_pos;
+        scanf("%d", &new_pos);
+        if (new_pos == 0) break;
+
+        // printf("Will move to %d\n", new_pos);
+
+        for (int l = 0; l <= 4; l++)
+            for (int r = 0; r <= 4; r++) FORCE[n][l][r] = INF;
+
+        for (int l = 0; l <= 4; l++) {
+            for (int r = 0; r <= 4; r++) {
+                if (l == r && l != 0) continue;
+                if (FORCE[n - 1][l][r] == INF) continue;
+
+                // printf("Move from (%d, %d) %d\n", l, r, FORCE[n - 1][l][r]);
+
+                int nl[3] = {l, new_pos, l};
+                int nr[3] = {r, r, new_pos};
+                int nf[3] = {1, get_score(l, new_pos), get_score(r, new_pos)};
+                for (int i = 0; i < 3; i++) {
+                    if (l == r && l != 0) continue;
+                    if (nl[i] != new_pos && nr[i] != new_pos) continue;
+
+                    // printf("Move to (%d, %d) + %d\n", nl[i], nr[i], nf[i]);
+
+                    int force = FORCE[n - 1][l][r] + nf[i];
+
+                    // printf("New force %d\n", nf[i]);
+
+                    if (FORCE[n][nl[i]][nr[i]] > force) {
+                        FORCE[n][nl[i]][nr[i]] = force;
+
+                        // printf("Renew to %d\n", force);
+                    }
+                }
+            }
+        }
+        n++;
+    }
+    int min_force = INF;
+    for (int l = 0; l <= 4; l++)
+        for (int r = 0; r <= 4; r++)
+            if (FORCE[n - 1][l][r] < min_force) min_force = FORCE[n - 1][l][r];
+
+    printf("%d", min_force);
+
+    return 0;
+}
+
+int get_score(int from, int to) {
+    if (from == to) return 1;
+    switch (from) {
+        case 0:
+            return 2;
+        case 1:
+            switch (to) {
+                case 0:
+                    return 2;
+                case 2:
+                    return 3;
+                case 3:
+                    return 4;
+                case 4:
+                    return 3;
+            }
+        case 2:
+            switch (to) {
+                case 0:
+                    return 2;
+                case 1:
+                    return 3;
+                case 3:
+                    return 3;
+                case 4:
+                    return 4;
+            }
+        case 3:
+            switch (to) {
+                case 0:
+                    return 2;
+                case 1:
+                    return 4;
+                case 2:
+                    return 3;
+                case 4:
+                    return 3;
+            }
+        case 4:
+            switch (to) {
+                case 0:
+                    return 2;
+                case 1:
+                    return 3;
+                case 2:
+                    return 4;
+                case 3:
+                    return 3;
+            }
+    }
+}
