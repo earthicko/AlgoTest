@@ -1,0 +1,243 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 800
+#define INF __INT32_MAX__
+
+typedef struct Node {
+    int i, d;
+} Node;
+typedef struct Heap {
+    int (*cmp)(Node*, Node*);
+    int n;
+    int cap;
+    Node* data;
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*));
+int Heap__del__(Heap* this);
+int Node_min_cmp(Node* a, Node* b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, Node new_val);
+Node Heap_pop(Heap* this);
+int Heap_remove(Heap* this, Node val);
+int Heap_realloc(Heap* this, int new_cap);
+
+int N, N_E;
+int E[N_MAX][N_MAX];
+int V1, V2;
+
+int do_dijkstra(int s, int e);
+
+int main() {
+    scanf("%d %d", &N, &N_E);
+    for (int i = 0; i < N_E; i++) {
+        int s, e, d;
+        scanf("%d %d %d", &s, &e, &d);
+        s--;
+        e--;
+        E[s][e] = d;
+        E[e][s] = d;
+    }
+    scanf("%d %d", &V1, &V2);
+    V1--;
+    V2--;
+
+    int zero_to_v1 = do_dijkstra(0, V1);
+    int v1_to_v2 = do_dijkstra(V1, V2);
+    int v2_to_n = do_dijkstra(V2, N - 1);
+    int zero_to_v2 = do_dijkstra(0, V2);
+    int v1_to_n = do_dijkstra(V1, N - 1);
+
+    int sum_0, sum_1;
+    sum_0 = zero_to_v1 + v1_to_v2 + v2_to_n;
+    sum_1 = zero_to_v2 + v1_to_v2 + v1_to_n;
+
+    int print_which;
+    if (zero_to_v1 != INF && v1_to_v2 != INF && v2_to_n != INF &&
+        zero_to_v2 != INF && v1_to_n != INF) {
+        if (sum_0 < sum_1)
+            print_which = 0;
+        else
+            print_which = 1;
+    } else if (zero_to_v1 != INF && v1_to_v2 != INF && v2_to_n != INF) {
+        print_which = 1;
+    } else if (zero_to_v2 != INF && v1_to_v2 != INF && v1_to_n != INF) {
+        print_which = 0;
+    } else {
+        print_which = -1;
+    }
+
+    switch (print_which) {
+        case -1:
+            printf("-1");
+            break;
+        case 0:
+            printf("%d", sum_0);
+            break;
+        case 1:
+            printf("%d", sum_1);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+
+int do_dijkstra(int s, int e) {
+    int min_d[N_MAX], visited[N_MAX];
+    for (int i = 0; i < N; i++) {
+        min_d[i] = INF;
+        visited[i] = 0;
+    }
+    min_d[s] = 0;
+    Heap* q = Heap__init__(N + 2, Node_min_cmp);
+    Node start = {s, 0};
+    Heap_push(q, start);
+    while (q->n > 0) {
+        Node here = Heap_pop(q);
+        for (int next = 0; next < N; next++) {
+            if (E[here.i][next] == 0) continue;
+            if (visited[next]) continue;
+            if (min_d[next] <= min_d[here.i] + E[here.i][next]) continue;
+            min_d[next] = min_d[here.i] + E[here.i][next];
+            Node there = {next, min_d[next]};
+            Heap_push(q, there);
+        }
+        if (here.i == e) break;
+        visited[here.i] = 1;
+    }
+    Heap__del__(q);
+    return min_d[e];
+}
+
+Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (Node*)malloc(sizeof(Node) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int Node_min_cmp(Node* a, Node* b) {
+    // a > b => 1, a == b => 0, a < b => -1
+    if (a->d > b->d) return 1;
+    if (a->d == b->d) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_i) {
+    if (s_i == 1) return 0;
+    int parent_idx = s_i / 2;
+    if (this->cmp(this->data + parent_idx, this->data + s_i) == 1) {
+        // parent is bigger -> swap
+        Node temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_i];
+        this->data[s_i] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* h, int s_i) {
+    int l_i = s_i * 2;
+    int r_i = s_i * 2 + 1;
+
+    Node parent, l, r;
+
+    char swap = 0;
+    if (l_i <= h->n) {
+        // left child exists
+        parent = h->data[s_i];
+        l = h->data[l_i];
+        if (r_i <= h->n) {  // right child exists
+            r = h->data[r_i];
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1 &&
+                h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // both children are smaller
+                if (h->cmp(h->data + r_i, h->data + l_i) >= 0)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;  // swap with right child
+            } else if (h->cmp(h->data + s_i, h->data + l_i) == 1) {
+                // only left child is smaller
+                swap = 1;  // swap with left child
+            } else if (h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // only right child is smaller
+                swap = 2;  // swap with right child
+            }
+        } else {
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1)
+                swap = 1;  // swap with left child
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            h->data[l_i] = parent;
+            h->data[s_i] = l;
+            Heap_sort_from_top(h, l_i);
+            break;
+        case 2:  // swap with right child
+            h->data[r_i] = parent;
+            h->data[s_i] = r;
+            Heap_sort_from_top(h, r_i);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+int Heap_push(Heap* this, Node new_val) {
+    if (this->n + 1 == this->cap) Heap_realloc(this, this->cap * 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+Node Heap_pop(Heap* this) {
+    Node top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}
+int Heap_find(Heap* this, int from, Node val) {
+    if (this->cmp(this->data + from, &val) == 0) return from;
+    int l_i = from * 2;
+    int r_i = from * 2 + 1;
+    if (l_i <= this->n && this->cmp(this->data + l_i, &val) <= 0) {
+        int res = Heap_find(this, l_i, val);
+        if (res != -1) return res;
+    }
+    if (r_i <= this->n && this->cmp(this->data + r_i, &val) <= 0) {
+        int res = Heap_find(this, r_i, val);
+        if (res != -1) return res;
+    }
+    return -1;
+}
+int Heap_remove(Heap* this, Node val) {
+    int from = Heap_find(this, 1, val);
+    if (from == -1) return -1;
+    Node top_val = this->data[from];
+    this->data[from] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return 0;
+    Heap_sort_from_top(this, from);
+    return 0;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    Node* temp = this->data;
+    this->data = (Node*)malloc(sizeof(Node) * new_cap);
+    for (int i = 0; i < this->n; i++) this->data[i] = temp[i];
+    if (temp != NULL) free(temp);
+    return 0;
+}

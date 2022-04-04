@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define K_MAX 11
+
+typedef struct strmtx {
+    char** str;
+    int r, c;
+} strmtx;
+
+char triangle_0[3][6] = {{"  *  "}, {" * * "}, {"*****"}};
+char filler[2] = {" "};
+char rectangle_0[3][4] = {{"   "}, {"   "}, {"   "}};
+char blank = ' ';
+
+strmtx* triangle(int k);
+strmtx* blank_rectangle(int k);
+
+strmtx *TRI[K_MAX], *RECT[K_MAX], *TRI_2[K_MAX];
+
+int print_strmtx(strmtx* str) {
+    for (int r = 0; r < str->r; r++) {
+        for (int c = 0; c < str->c; c++) printf("%c", str->str[r][c]);
+        printf("\n");
+    }
+    return 0;
+}
+
+int main() {
+    int N, K = -1;
+    scanf("%d", &N);
+    N /= 3;
+    while (N > 0) {
+        N /= 2;
+        K++;
+    }
+    for (int i = 0; i <= K; i++) {
+        TRI[i] = NULL;
+        RECT[i] = NULL;
+        TRI_2[i] = NULL;
+    }
+    print_strmtx(triangle(K));
+    return 0;
+}
+
+strmtx* blank_rectangle(int k) {
+    if (RECT[k] != NULL) return RECT[k];
+
+    RECT[k] = (strmtx*)malloc(sizeof(strmtx));
+
+    int width = 3;
+    for (int i = 0; i < k; i++) width *= 2;
+
+    RECT[k]->str = (char**)malloc(sizeof(char*) * width);
+    for (int r = 0; r < width; r++) {
+        RECT[k]->str[r] = (char*)malloc(sizeof(char) * (width + 1));
+        for (int c = 0; c < width; c++) RECT[k]->str[r][c] = blank;
+        RECT[k]->str[r][width] = '\0';
+    }
+    RECT[k]->r = width;
+    RECT[k]->c = width;
+
+    // printf("Rectangle %d:\n", k);
+    // print_strmtx(RECT[k]);
+
+    return RECT[k];
+}
+
+strmtx* triangle(int k) {
+    if (TRI[k] != NULL) return TRI[k];
+
+    TRI[k] = (strmtx*)malloc(sizeof(strmtx));
+
+    if (k == 0) {
+        TRI[k]->str = (char**)malloc(sizeof(char*) * 3);
+        for (int r = 0; r < 3; r++) {
+            TRI[k]->str[r] = (char*)malloc(sizeof(char) * 6);
+            strcpy(TRI[k]->str[r], triangle_0[r]);
+        }
+        TRI[k]->r = 3;
+        TRI[k]->c = 5;
+    } else {
+        strmtx* rect = blank_rectangle(k - 1);
+        strmtx* tri = triangle(k - 1);
+        TRI[k]->r = tri->r * 2;
+        TRI[k]->c = tri->c * 2 + 1;
+
+        TRI[k]->str = (char**)malloc(sizeof(char*) * TRI[k]->r);
+        for (int r = 0; r < TRI[k]->r; r++) {
+            TRI[k]->str[r] = (char*)malloc(sizeof(char) * TRI[k]->c + 1);
+            memset(TRI[k]->str[r], '\0', sizeof(char) * TRI[k]->c + 1);
+        }
+        for (int r = 0; r < tri->r; r++) {
+            strcat(TRI[k]->str[r], rect->str[r]);
+            strcat(TRI[k]->str[r], tri->str[r]);
+            strcat(TRI[k]->str[r], rect->str[r]);
+        }
+        for (int r = tri->r; r < TRI[k]->r; r++) {
+            strcat(TRI[k]->str[r], tri->str[r - tri->r]);
+            strcat(TRI[k]->str[r], filler);
+            strcat(TRI[k]->str[r], tri->str[r - tri->r]);
+        }
+    }
+    // printf("Triangle %d:\n", k);
+    // print_strmtx(TRI[k]);
+    return TRI[k];
+}

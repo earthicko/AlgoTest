@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N_MAX 100001
+
+int IN[N_MAX], POST[N_MAX], IN_IDX[N_MAX];
+int N;
+
+int find_preorder(int sp, int ep, int si, int ei);
+
+int main() {
+    scanf("%d", &N);
+    for (int i = 0; i < N; i++) {
+        scanf("%d", &IN[i]);
+        IN_IDX[IN[i]] = i;
+    }
+    for (int i = 0; i < N; i++) scanf("%d", &POST[i]);
+
+    find_preorder(0, N - 1, 0, N - 1);
+    return 0;
+}
+
+// start_postorder, end_postorder, start_inorder, end_inorder
+int find_preorder(int sp, int ep, int si, int ei) {
+    if (sp > ep || si > ei) return -1;
+
+    printf("%d ", POST[ep]);  // last element of POST is the root
+    if (sp == ep || si == ei) return 0;
+
+    int middle = IN_IDX[POST[ep]];
+
+    // left sp ... right ei
+    int lsp, lep, lsi, lei, rsp, rep, rsi, rei;
+    if (middle == si) {
+        lsp = sp, lep = sp - 1;
+        rsp = sp, rep = ep - 1;
+        lsi = si, lei = si - 1;
+        rsi = middle + 1, rei = ei;
+    } else if (middle == ei) {
+        lsp = sp, lep = ep - 1;
+        rsp = ep, rep = ep - 1;
+        lsi = si, lei = middle - 1;
+        rsi = ei + 1, rei = ei;
+    } else {
+        int left_size = middle - si;
+        lsp = sp, lep = sp + left_size - 1;
+        rsp = sp + left_size, rep = ep - 1;
+        lsi = si, lei = middle - 1;
+        rsi = middle + 1, rei = ei;
+    }
+    find_preorder(lsp, lep, lsi, lei);
+    find_preorder(rsp, rep, rsi, rei);
+    return 0;
+}

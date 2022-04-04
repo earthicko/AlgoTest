@@ -1,0 +1,59 @@
+#include <stdio.h>
+#define N_MAX 500
+#define E_MAX 5200
+#define T_MAX 10000
+
+const int INF = E_MAX * T_MAX + 1;
+
+int main() {
+    int TC, N, E;
+    int EDGE[E_MAX][3];
+    scanf("%d", &TC);
+    for (int tc = 0; tc < TC; tc++) {
+        int M, W;
+        scanf("%d%d%d", &N, &M, &W);
+        E = 0;
+        for (int m = 0; m < M; m++) {
+            int s, e, d;
+            scanf("%d%d%d", &s, &e, &d);
+            s--, e--;
+            EDGE[E][0] = s;
+            EDGE[E][1] = e;
+            EDGE[E][2] = d;
+            E++;
+            EDGE[E][0] = e;
+            EDGE[E][1] = s;
+            EDGE[E][2] = d;
+            E++;
+        }
+        for (int w = 0; w < W; w++) {
+            int s, e, d;
+            scanf("%d%d%d", &s, &e, &d);
+            s--, e--;
+            EDGE[E][0] = s;
+            EDGE[E][1] = e;
+            EDGE[E][2] = -d;
+            E++;
+        }
+
+        int D[N_MAX];
+        for (int n = 0; n < N; n++) D[n] = 0;
+
+        int neg_cycle = 0;
+        for (int n = 0; n < N; n++) {
+            for (int e = 0; e < E; e++) {
+                int new_d = D[EDGE[e][0]] + EDGE[e][2];
+                if (new_d < D[EDGE[e][1]]) {
+                    if (n == N - 1) neg_cycle = 1;
+                    D[EDGE[e][1]] = new_d;
+                }
+            }
+        }
+
+        if (neg_cycle)
+            printf("YES\n");
+        else
+            printf("NO\n");
+    }
+    return 0;
+}

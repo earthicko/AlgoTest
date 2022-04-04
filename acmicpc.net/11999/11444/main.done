@@ -1,0 +1,50 @@
+#include <stdio.h>
+
+typedef long long ll;
+const ll P = 1000000007;
+typedef struct mtx {
+    ll a[2][2];
+} mtx;
+
+mtx multiply(mtx a, mtx b);
+mtx power(mtx base, ll exp);
+
+int main() {
+    ll n;
+    scanf("%lld", &n);
+    mtx fib_generator;
+    fib_generator.a[0][0] = 1;
+    fib_generator.a[0][1] = 1;
+    fib_generator.a[1][0] = 1;
+    fib_generator.a[1][1] = 0;
+    mtx result = power(fib_generator, n - 1);
+    printf("%lld", result.a[0][0]);
+    return 0;
+}
+
+mtx multiply(mtx a, mtx b) {
+    mtx result;
+    result.a[0][0] =
+        (((a.a[0][0] * b.a[0][0]) % P) + ((a.a[0][1] * b.a[1][0]) % P)) % P;
+    result.a[0][1] =
+        (((a.a[0][0] * b.a[0][1]) % P) + ((a.a[0][1] * b.a[1][1]) % P)) % P;
+    result.a[1][0] =
+        (((a.a[1][0] * b.a[0][0]) % P) + ((a.a[1][1] * b.a[1][0]) % P)) % P;
+    result.a[1][1] =
+        (((a.a[1][0] * b.a[0][1]) % P) + ((a.a[1][1] * b.a[1][1]) % P)) % P;
+    return result;
+}
+
+mtx power(mtx base, ll exp) {
+    mtx result;
+    result.a[0][0] = 1;
+    result.a[0][1] = 0;
+    result.a[1][0] = 0;
+    result.a[1][1] = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1) result = multiply(result, base);
+        base = multiply(base, base);
+        exp = exp / 2;
+    }
+    return result;
+}

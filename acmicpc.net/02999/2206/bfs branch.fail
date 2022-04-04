@@ -1,0 +1,158 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 1000
+
+typedef struct Item {
+    int r, c;
+} Item;
+typedef struct Queue {
+    int n, cap, head;
+    Item* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, Item item);
+Item Queue_pop(Queue* this);
+int Queue_resize(Queue* this, int cap_);
+
+int N, M, MIN_D_TO_END;
+int MAP[N_MAX][N_MAX], VISITED[N_MAX][N_MAX], MIN_D[N_MAX][N_MAX];
+Item dir[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int do_bfs_allow_1_break(Item s);
+int do_bfs_allow_no_break(Item s);
+
+int main() {
+    scanf("%d %d", &N, &M);
+    MIN_D_TO_END = __INT32_MAX__;
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) scanf("%1d", &MAP[r][c]);
+    Item s = {0, 0};
+    do_bfs_allow_1_break(s);
+    if (MIN_D_TO_END == __INT32_MAX__)
+        printf("-1");
+    else
+        printf("%d", MIN_D_TO_END);
+    return 0;
+}
+
+int do_bfs_allow_1_break(Item s) {
+    Queue* q = Queue__init__(N * M + 2);
+
+    Queue_push(q, s);
+    VISITED[s.r][s.c] = 1;
+
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) MIN_D[r][c] = __INT32_MAX__;
+    MIN_D[s.r][s.c] = 1;
+
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+        if (here.r == N - 1 && here.c == M - 1) break;
+
+        for (int i = 0; i < 4; i++) {
+            Item there = {here.r + dir[i].r, here.c + dir[i].c};
+
+            if (there.r < 0 || there.r >= N || there.c < 0 || there.c >= M)
+                continue;
+            if (VISITED[there.r][there.c]) continue;
+
+            VISITED[there.r][there.c] = 1;
+
+            int new_d = MIN_D[here.r][here.c] + 1;
+            if (MAP[there.r][there.c] == 1) {
+                if (MIN_D[there.r][there.c] > new_d)
+                    MIN_D[there.r][there.c] = new_d;
+                do_bfs_allow_no_break(there);
+            } else {
+                if (MIN_D[there.r][there.c] > new_d) {
+                    MIN_D[there.r][there.c] = new_d;
+                    Queue_push(q, there);
+                }
+            }
+        }
+    }
+    Queue__del__(q);
+
+    if (MIN_D_TO_END > MIN_D[N - 1][M - 1]) MIN_D_TO_END = MIN_D[N - 1][M - 1];
+    return 0;
+}
+int do_bfs_allow_no_break(Item s) {
+    // printf("Branch from (%d, %d)\n", s.r, s.c);
+    int min_d_copy[N_MAX][N_MAX], visited_copy[N_MAX][N_MAX];
+
+    Queue* q = Queue__init__(N * M + 2);
+    Queue_push(q, s);
+
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < M; c++) {
+            min_d_copy[r][c] = MIN_D[r][c];
+            visited_copy[r][c] = VISITED[r][c];
+        }
+
+    while (q->n > 0) {
+        Item here = Queue_pop(q);
+        if (here.r == N - 1 && here.c == M - 1) break;
+
+        for (int i = 0; i < 4; i++) {
+            Item there = {here.r + dir[i].r, here.c + dir[i].c};
+            if (there.r < 0 || there.r >= N || there.c < 0 || there.c >= M)
+                continue;
+            if (visited_copy[there.r][there.c]) continue;
+            if (MAP[there.r][there.c] == 1) continue;
+
+            visited_copy[there.r][there.c] = 1;
+
+            int new_d = min_d_copy[here.r][here.c] + 1;
+            if (min_d_copy[there.r][there.c] > new_d) {
+                min_d_copy[there.r][there.c] = new_d;
+                Queue_push(q, there);
+            }
+        }
+    }
+    Queue__del__(q);
+    // printf("Branch result %d\n", min_d_copy[N - 1][M - 1]);
+    if (MIN_D_TO_END > min_d_copy[N - 1][M - 1])
+        MIN_D_TO_END = min_d_copy[N - 1][M - 1];
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (Item*)malloc(sizeof(Item) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_push(Queue* this, Item item) {
+    // assert(this->n < this->cap);
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+Item Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}
+int Queue_resize(Queue* this, int cap_) {
+    Item* linear = (Item*)malloc(sizeof(Item) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (Item*)malloc(sizeof(Item) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}
