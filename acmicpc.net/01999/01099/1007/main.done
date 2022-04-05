@@ -1,0 +1,58 @@
+#include <math.h>
+#include <stdio.h>
+
+#define N_MAX 100000
+
+int T, N;
+int COORDS[N_MAX][2];
+int PICKED[N_MAX], N_PICKED, N_NEEDS_PICK;
+long long MIN_SUM_SQ_LEN;
+double MIN_SUM_LEN;
+
+int pick_dfs(int from);
+
+int main() {
+    scanf("%d", &T);
+    while (T--) {
+        scanf("%d", &N);
+
+        N_PICKED = 0, N_NEEDS_PICK = N / 2;
+        for (int n = 0; n < N; n++) {
+            scanf("%d %d", &COORDS[n][0], &COORDS[n][1]);
+            PICKED[n] = 0;
+        }
+        MIN_SUM_SQ_LEN = __LONG_LONG_MAX__;
+
+        pick_dfs(-1);
+        MIN_SUM_LEN = sqrt(MIN_SUM_SQ_LEN);
+        printf("%0.7lf\n", MIN_SUM_LEN);
+    }
+    return 0;
+}
+
+int pick_dfs(int from) {
+    if (N_PICKED == N_NEEDS_PICK) {
+        long long dx = 0, dy = 0;
+        for (int i = 0; i < N; i++) {
+            if (PICKED[i]) {
+                dx += COORDS[i][0];
+                dy += COORDS[i][1];
+            } else {
+                dx -= COORDS[i][0];
+                dy -= COORDS[i][1];
+            }
+        }
+        long long sq_len = dx * dx + dy * dy;
+        if (MIN_SUM_SQ_LEN > sq_len) MIN_SUM_SQ_LEN = sq_len;
+        return 0;
+    }
+
+    N_PICKED++;
+    for (int to = from + 1; to < N; to++) {
+        PICKED[to] = 1;
+        pick_dfs(to);
+        PICKED[to] = 0;
+    }
+    N_PICKED--;
+    return 0;
+}

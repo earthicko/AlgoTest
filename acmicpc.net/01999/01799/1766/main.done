@@ -1,0 +1,223 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef int LinkedListData;
+typedef struct LinkedListNode {
+    LinkedListData data;
+    struct LinkedListNode* next;
+} LinkedListNode;
+typedef struct LinkedList {
+    LinkedListNode* head;
+} LinkedList;
+LinkedList* LinkedList__init__();
+int LinkedList__del__(LinkedList* this);
+LinkedListNode* Node__init__(LinkedList* parent, LinkedListData val);
+LinkedListNode* LinkedList_append_front(LinkedList* this,
+                                        LinkedListData val);
+typedef int HeapItem;
+typedef struct Heap {
+    int (*cmp)(HeapItem*, HeapItem*);
+    int n;
+    int cap;
+    HeapItem* data;
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*));
+int Heap__del__(Heap* this);
+int HeapItem_min_cmp(HeapItem* a, HeapItem* b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, HeapItem new_val);
+HeapItem Heap_pop(Heap* this);
+
+#define N_MAX 32000
+
+int N;
+LinkedList PRIOR[N_MAX];               // 256KB
+int IN_DEGREE[N_MAX], VISITED[N_MAX];  // 256KB
+
+// int print_list(LinkedList* this) {
+//     LinkedListNode* head = this->head;
+//     while (head != NULL) {
+//         printf("%d ", head->data + 1);
+//         head = head->next;
+//     }
+//     printf("\n");
+//     return 0;
+// }
+
+int main() {
+    int n_relations;
+    scanf("%d%d", &N, &n_relations);
+    for (int n = 0; n < N; n++) PRIOR[n].head = NULL;
+    for (int i = 0; i < n_relations; i++) {
+        int first, last;
+        scanf("%d%d", &first, &last);
+        first--, last--;
+        LinkedList_append_front(&PRIOR[first], last);
+        IN_DEGREE[last]++;
+    }
+
+    // for (int i = 0; i < N; i++) {
+    //     printf("From %d: ", i + 1);
+    //     print_list(&PRIOR[i]);
+    // }
+
+    Heap* in_degree_0_nodes = Heap__init__(N + 2, HeapItem_min_cmp);
+    for (int n = 0; n < N; n++)
+        if (IN_DEGREE[n] == 0) {
+            Heap_push(in_degree_0_nodes, n);
+            VISITED[n] = 1;
+        }
+
+    while (in_degree_0_nodes->n > 0) {
+        int here = Heap_pop(in_degree_0_nodes);
+        printf("%d ", here + 1);
+
+        LinkedListNode* there_node = PRIOR[here].head;
+        while (there_node != NULL) {
+            int there = there_node->data;
+            if (VISITED[there]) continue;
+            IN_DEGREE[there]--;
+            if (IN_DEGREE[there] == 0) {
+                Heap_push(in_degree_0_nodes, there);
+                VISITED[there] = 1;
+            }
+            there_node = there_node->next;
+        }
+    }
+
+    return 0;
+}
+
+LinkedList* LinkedList__init__() {
+    LinkedList* constructed = (LinkedList*)malloc(sizeof(LinkedList));
+    constructed->head = NULL;
+    return constructed;
+}
+int LinkedList__del__(LinkedList* this) {
+    LinkedListNode* deleted = this->head;
+    while (deleted != NULL) {
+        free(deleted);
+        deleted = deleted->next;
+    }
+    free(this);
+    return 0;
+}
+LinkedListNode* Node__init__(LinkedList* parent, LinkedListData val) {
+    LinkedListNode* constructed =
+        (LinkedListNode*)malloc(sizeof(LinkedListNode));
+    constructed->data = val;
+    constructed->next = NULL;
+    return constructed;
+}
+LinkedListNode* LinkedList_append_front(LinkedList* this,
+                                        LinkedListData val) {
+    LinkedListNode* new_node = Node__init__(this, val);
+    new_node->next = this->head;
+    this->head = new_node;
+    return new_node;
+}
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (HeapItem*)malloc(sizeof(HeapItem) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    this->data = (HeapItem*)realloc(this->data, new_cap);
+    return 0;
+}
+int HeapItem_min_cmp(HeapItem* a, HeapItem* b) {
+    // a > b => 1, a == b => 0, a < b => -1
+    if (*a > *b) return 1;
+    if (*a == *b) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_i) {
+    if (s_i == 1) return 0;
+    int parent_idx = s_i / 2;
+    if (this->cmp(this->data + parent_idx, this->data + s_i) == 1) {
+        // parent is bigger -> swap
+        HeapItem temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_i];
+        this->data[s_i] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* h, int s_i) {
+    int l_i = s_i * 2;
+    int r_i = s_i * 2 + 1;
+
+    HeapItem parent, l, r;
+
+    char swap = 0;
+    if (l_i <= h->n) {
+        // left child exists
+        parent = h->data[s_i];
+        l = h->data[l_i];
+        if (r_i <= h->n) {  // right child exists
+            r = h->data[r_i];
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1 &&
+                h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // both children are smaller
+                if (h->cmp(h->data + r_i, h->data + l_i) >= 0)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;  // swap with right child
+            } else if (h->cmp(h->data + s_i, h->data + l_i) == 1) {
+                // only left child is smaller
+                swap = 1;  // swap with left child
+            } else if (h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // only right child is smaller
+                swap = 2;  // swap with right child
+            }
+        } else {
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1)
+                swap = 1;  // swap with left child
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            h->data[l_i] = parent;
+            h->data[s_i] = l;
+            Heap_sort_from_top(h, l_i);
+            break;
+        case 2:  // swap with right child
+            h->data[r_i] = parent;
+            h->data[s_i] = r;
+            Heap_sort_from_top(h, r_i);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+int Heap_push(Heap* this, HeapItem new_val) {
+    if (this->n - 1 == this->cap) Heap_realloc(this, this->cap * 3 / 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+HeapItem Heap_pop(Heap* this) {
+    HeapItem top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}

@@ -1,0 +1,175 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef long long ll;
+typedef struct item {
+    ll m, v;
+} item;
+
+typedef ll HeapItem;
+typedef struct Heap {
+    int (*cmp)(HeapItem*, HeapItem*);
+    int n;
+    int cap;
+    HeapItem* data;
+} Heap;
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*));
+int Heap__del__(Heap* this);
+int HeapItem_max_cmp(HeapItem* a, HeapItem* b);
+int Heap_sort_from_bottom(Heap* this, int start_index);
+int Heap_sort_from_top(Heap* this, int start_index);
+int Heap_push(Heap* this, HeapItem new_val);
+HeapItem Heap_pop(Heap* this);
+int Heap_realloc(Heap* this, int new_cap);
+
+#define N_MAX 300000
+
+int N, K;
+item ITEMS[N_MAX];
+ll C[N_MAX];
+
+int cmp_ll(const void* a, const void* b);
+int cmp_item(const void* a, const void* b);
+
+int main() {
+    scanf("%d %d", &N, &K);
+    for (int n = 0; n < N; n++)
+        scanf("%lld %lld", &(ITEMS[n].m), &(ITEMS[n].v));
+    for (int k = 0; k < K; k++) scanf("%lld", &C[k]);
+
+    qsort(ITEMS, N, sizeof(item), cmp_item);
+    qsort(C, K, sizeof(ll), cmp_ll);
+
+    ll total_val = 0;
+    Heap* item_pool = Heap__init__(N, HeapItem_max_cmp);
+    int n = 0;
+    for (int k = 0; k < K; k++) {
+        while (n < N && ITEMS[n].m <= C[k]) {
+            Heap_push(item_pool, ITEMS[n].v);
+            n++;
+        }
+        if (item_pool->n > 0) {
+            ll top = Heap_pop(item_pool);
+            total_val += top;
+        }
+    }
+    printf("%lld\n", total_val);
+
+    return 0;
+}
+
+int cmp_ll(const void* a, const void* b) {  // 오름차순
+    if (*(ll*)a > *(ll*)b) return 1;
+    if (*(ll*)a < *(ll*)b) return -1;
+    return 0;
+}
+
+int cmp_item(const void* a, const void* b) {  // 오름차순
+    if (((item*)a)->m > ((item*)b)->m) return 1;
+    if (((item*)a)->m < ((item*)b)->m) return -1;
+    return 0;
+}
+
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*)) {
+    Heap* new = (Heap*)malloc(sizeof(Heap));
+    new->cmp = cmp_;
+    new->n = 0;
+    new->cap = cap_;
+    new->data = (HeapItem*)malloc(sizeof(HeapItem) * cap_);
+    return new;
+}
+int Heap__del__(Heap* this) {
+    free(this->data);
+    free(this);
+    return 0;
+}
+int HeapItem_max_cmp(HeapItem* a, HeapItem* b) {
+    // a < b => 1, a == b => 0, a > b => -1
+    if (*a < *b) return 1;
+    if (*a == *b) return 0;
+    return -1;
+}
+int Heap_sort_from_bottom(Heap* this, int s_i) {
+    if (s_i == 1) return 0;
+    int parent_idx = s_i / 2;
+    if (this->cmp(this->data + parent_idx, this->data + s_i) == 1) {
+        // parent is bigger -> swap
+        HeapItem temp = this->data[parent_idx];
+        this->data[parent_idx] = this->data[s_i];
+        this->data[s_i] = temp;
+        Heap_sort_from_bottom(this, parent_idx);
+    }
+    return 0;
+}
+int Heap_sort_from_top(Heap* h, int s_i) {
+    int l_i = s_i * 2;
+    int r_i = s_i * 2 + 1;
+
+    HeapItem parent, l, r;
+
+    char swap = 0;
+    if (l_i <= h->n) {
+        // left child exists
+        parent = h->data[s_i];
+        l = h->data[l_i];
+        if (r_i <= h->n) {  // right child exists
+            r = h->data[r_i];
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1 &&
+                h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // both children are smaller
+                if (h->cmp(h->data + r_i, h->data + l_i) >= 0)
+                    swap = 1;  // swap with left child
+                else
+                    swap = 2;  // swap with right child
+            } else if (h->cmp(h->data + s_i, h->data + l_i) == 1) {
+                // only left child is smaller
+                swap = 1;  // swap with left child
+            } else if (h->cmp(h->data + s_i, h->data + r_i) == 1) {
+                // only right child is smaller
+                swap = 2;  // swap with right child
+            }
+        } else {
+            if (h->cmp(h->data + s_i, h->data + l_i) == 1)
+                swap = 1;  // swap with left child
+        }
+    }
+    switch (swap) {
+        case 0:  // do nothing
+            break;
+        case 1:  // swap with left child
+            h->data[l_i] = parent;
+            h->data[s_i] = l;
+            Heap_sort_from_top(h, l_i);
+            break;
+        case 2:  // swap with right child
+            h->data[r_i] = parent;
+            h->data[s_i] = r;
+            Heap_sort_from_top(h, r_i);
+            break;
+        default:
+            break;
+    }
+    return 0;
+}
+int Heap_push(Heap* this, HeapItem new_val) {
+    if (this->n - 1 == this->cap) Heap_realloc(this, this->cap * 2);
+    this->n++;
+    this->data[this->n] = new_val;
+    if (this->n == 1) return 0;
+    Heap_sort_from_bottom(this, this->n);
+    return 0;
+}
+HeapItem Heap_pop(Heap* this) {
+    HeapItem top_val = this->data[1];
+    this->data[1] = this->data[this->n];
+    this->n--;
+    if (this->n == 0) return top_val;
+    Heap_sort_from_top(this, 1);
+    return top_val;
+}
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    this->data = (HeapItem*)realloc(this->data, new_cap);
+    return 0;
+}
