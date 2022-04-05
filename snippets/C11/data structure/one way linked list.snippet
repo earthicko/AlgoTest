@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef int LinkedListData;
+typedef struct LinkedListNode {
+    LinkedListData data;
+    struct LinkedListNode* next;
+} LinkedListNode;
+typedef struct LinkedList {
+    LinkedListNode* head;
+} LinkedList;
+LinkedList* LinkedList__init__();
+int LinkedList__del__(LinkedList* this);
+LinkedListNode* Node__init__(LinkedList* parent, LinkedListData val);
+LinkedListNode* LinkedList_append_front(LinkedList* this, LinkedListData val);
+
+LinkedList* LinkedList__init__() {
+    LinkedList* constructed = (LinkedList*)malloc(sizeof(LinkedList));
+    constructed->head = NULL;
+    return constructed;
+}
+int LinkedList__del__(LinkedList* this) {
+    LinkedListNode* deleted = this->head;
+    while (deleted != NULL) {
+        free(deleted);
+        deleted = deleted->next;
+    }
+    free(this);
+    return 0;
+}
+LinkedListNode* Node__init__(LinkedList* parent, LinkedListData val) {
+    LinkedListNode* constructed =
+        (LinkedListNode*)malloc(sizeof(LinkedListNode));
+    constructed->data = val;
+    constructed->next = NULL;
+    return constructed;
+}
+LinkedListNode* LinkedList_append_front(LinkedList* this, LinkedListData val) {
+    LinkedListNode* new_node = Node__init__(this, val);
+    new_node->next = this->head;
+    this->head = new_node;
+    return new_node;
+}

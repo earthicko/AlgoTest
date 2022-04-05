@@ -2,24 +2,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Node {
-    int data;
-    struct Node* left;
-    struct Node* right;
+typedef int LinkedListData;
+typedef struct LinkedListNode {
+    LinkedListData data;
+    struct LinkedListNode* left;
+    struct LinkedListNode* right;
     struct List* parent;
-} Node;
+} LinkedListNode;
 typedef struct List {
     int n;
-    Node* head;
-    Node* tail;
+    LinkedListNode* head;
+    LinkedListNode* tail;
 } List;
-
 List* List__init__();
 int List__del__(List* this);
-Node* Node__init__(List* parent, int val);
-Node* List_append(List* this, int val);
-Node* List_insert(Node* reference, int val, char direction);
-Node* List_pop(List* this, int i);
+LinkedListNode* Node__init__(List* parent, LinkedListData val);
+LinkedListNode* List_append(List* this, LinkedListData val);
+LinkedListNode* List_insert(LinkedListNode* ref, LinkedListData val, char dir);
+LinkedListNode* List_pop(List* this, int i);
 
 List* List__init__() {
     List* constructed = (List*)malloc(sizeof(List));
@@ -29,7 +29,7 @@ List* List__init__() {
     return constructed;
 }
 int List__del__(List* this) {
-    Node* deleted = this->head;
+    LinkedListNode* deleted = this->head;
     while (deleted != NULL) {
         free(deleted);
         deleted = deleted->right;
@@ -37,16 +37,16 @@ int List__del__(List* this) {
     free(this);
     return 0;
 }
-Node* Node__init__(List* parent, int val) {
-    Node* constructed = (Node*)malloc(sizeof(Node));
-    constructed->data = val;
-    constructed->left = NULL;
-    constructed->right = NULL;
-    constructed->parent = parent;
-    return constructed;
+LinkedListNode* Node__init__(List* parent, LinkedListData val) {
+    LinkedListNode* this = (LinkedListNode*)malloc(sizeof(LinkedListNode));
+    this->data = val;
+    this->left = NULL;
+    this->right = NULL;
+    this->parent = parent;
+    return this;
 }
-Node* List_append(List* this, int val) {
-    Node* new_node = Node__init__(this, val);
+LinkedListNode* List_append(List* this, LinkedListData val) {
+    LinkedListNode* new_node = Node__init__(this, val);
     if (this->n == 0) {
         this->head = new_node;
         this->tail = new_node;
@@ -59,23 +59,23 @@ Node* List_append(List* this, int val) {
     return new_node;
 }
 // direction) 0: left / 1: right
-Node* List_insert(Node* reference, int val, char direction) {
-    Node* inserted = Node__init__(reference->parent, val);
-    Node* temp;
+LinkedListNode* List_insert(LinkedListNode* ref, LinkedListData val, char dir) {
+    LinkedListNode* inserted = Node__init__(ref->parent, val);
+    LinkedListNode* temp;
     inserted->parent->n++;
-    if (direction) {  // right
-        temp = reference->right;
-        reference->right = inserted;
-        inserted->left = reference;
+    if (dir) {  // right
+        temp = ref->right;
+        ref->right = inserted;
+        inserted->left = ref;
         inserted->right = temp;
         if (temp != NULL)
             temp->left = inserted;
         else
             inserted->parent->tail = inserted;
     } else {  // left
-        temp = reference->left;
-        reference->left = inserted;
-        inserted->right = reference;
+        temp = ref->left;
+        ref->left = inserted;
+        inserted->right = ref;
         inserted->left = temp;
         if (temp != NULL)
             temp->right = inserted;
@@ -84,10 +84,10 @@ Node* List_insert(Node* reference, int val, char direction) {
     }
     return inserted;
 }
-Node* List_pop(List* this, int i) {
+LinkedListNode* List_pop(List* this, int i) {
     assert(0 <= i && i < this->n);
     this->n--;
-    Node* popped;
+    LinkedListNode* popped;
 
     if (this->n == 0) {
         popped = this->head;

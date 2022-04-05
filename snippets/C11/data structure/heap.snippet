@@ -1,35 +1,34 @@
 #include <stdlib.h>
 
-typedef int Node;
+typedef int HeapItem;
 
 typedef struct Heap {
-    int (*cmp)(Node*, Node*);
-    int (*push)(struct Heap*, Node);
-    Node (*pop)(struct Heap*);
+    int (*cmp)(HeapItem*, HeapItem*);
+    int (*push)(struct Heap*, HeapItem);
+    HeapItem (*pop)(struct Heap*);
     int n;
     int cap;
-    Node* data;
+    HeapItem* data;
 } Heap;
 
-Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*));
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*));
 int Heap__del__(Heap* this);
-int Node_min_cmp(Node* a, Node* b);
-int Node_max_cmp(Node* a, Node* b);
+int HeapItem_min_cmp(HeapItem* a, HeapItem* b);
+int HeapItem_max_cmp(HeapItem* a, HeapItem* b);
 int Heap_sort_from_bottom(Heap* this, int start_index);
 int Heap_sort_from_top(Heap* this, int start_index);
-int Heap_push(Heap* this, Node new_val);
-Node Heap_pop(Heap* this);
-int Heap_remove(Heap* this, Node val);
-int Heap_realloc(Heap* this, int new_cap);
+int Heap_push(Heap* this, HeapItem new_val);
+HeapItem Heap_pop(Heap* this);
+int Heap_remove(Heap* this, HeapItem val);
 
-Heap* Heap__init__(int cap_, int (*cmp_)(Node*, Node*)) {
+Heap* Heap__init__(int cap_, int (*cmp_)(HeapItem*, HeapItem*)) {
     Heap* new = (Heap*)malloc(sizeof(Heap));
     new->cmp = cmp_;
     new->push = Heap_push;
     new->pop = Heap_pop;
     new->n = 0;
     new->cap = cap_;
-    new->data = (Node*)malloc(sizeof(Node) * cap_);
+    new->data = (HeapItem*)malloc(sizeof(HeapItem) * cap_);
     return new;
 }
 int Heap__del__(Heap* this) {
@@ -37,13 +36,19 @@ int Heap__del__(Heap* this) {
     free(this);
     return 0;
 }
-int Node_min_cmp(Node* a, Node* b) {
+int Heap_realloc(Heap* this, int new_cap) {
+    if (new_cap <= this->cap) return 0;
+    this->cap = new_cap;
+    this->data = (HeapItem*)realloc(this->data, new_cap);
+    return 0;
+}
+int HeapItem_min_cmp(HeapItem* a, HeapItem* b) {
     // a > b => 1, a == b => 0, a < b => -1
     if (*a > *b) return 1;
     if (*a == *b) return 0;
     return -1;
 }
-int Node_max_cmp(Node* a, Node* b) {
+int HeapItem_max_cmp(HeapItem* a, HeapItem* b) {
     // a < b => 1, a == b => 0, a > b => -1
     if (*a < *b) return 1;
     if (*a == *b) return 0;
@@ -54,7 +59,7 @@ int Heap_sort_from_bottom(Heap* this, int s_i) {
     int parent_idx = s_i / 2;
     if (this->cmp(this->data + parent_idx, this->data + s_i) == 1) {
         // parent is bigger -> swap
-        Node temp = this->data[parent_idx];
+        HeapItem temp = this->data[parent_idx];
         this->data[parent_idx] = this->data[s_i];
         this->data[s_i] = temp;
         Heap_sort_from_bottom(this, parent_idx);
@@ -65,7 +70,7 @@ int Heap_sort_from_top(Heap* h, int s_i) {
     int l_i = s_i * 2;
     int r_i = s_i * 2 + 1;
 
-    Node parent, l, r;
+    HeapItem parent, l, r;
 
     char swap = 0;
     if (l_i <= h->n) {
@@ -111,23 +116,23 @@ int Heap_sort_from_top(Heap* h, int s_i) {
     }
     return 0;
 }
-int Heap_push(Heap* this, Node new_val) {
-    if (this->n + 1 == this->cap) Heap_realloc(this, this->cap * 2);
+int Heap_push(Heap* this, HeapItem new_val) {
+    if (this->n - 1 == this->cap) Heap_realloc(this, this->cap * 2);
     this->n++;
     this->data[this->n] = new_val;
     if (this->n == 1) return 0;
     Heap_sort_from_bottom(this, this->n);
     return 0;
 }
-Node Heap_pop(Heap* this) {
-    Node top_val = this->data[1];
+HeapItem Heap_pop(Heap* this) {
+    HeapItem top_val = this->data[1];
     this->data[1] = this->data[this->n];
     this->n--;
     if (this->n == 0) return top_val;
     Heap_sort_from_top(this, 1);
     return top_val;
 }
-int Heap_find(Heap* this, int from, Node val) {
+int Heap_find(Heap* this, int from, HeapItem val) {
     if (this->cmp(this->data + from, &val) == 0) return from;
     int l_i = from * 2;
     int r_i = from * 2 + 1;
@@ -141,22 +146,13 @@ int Heap_find(Heap* this, int from, Node val) {
     }
     return -1;
 }
-int Heap_remove(Heap* this, Node val) {
+int Heap_remove(Heap* this, HeapItem val) {
     int from = Heap_find(this, 1, val);
     if (from == -1) return -1;
-    Node top_val = this->data[from];
+    HeapItem top_val = this->data[from];
     this->data[from] = this->data[this->n];
     this->n--;
     if (this->n == 0) return 0;
     Heap_sort_from_top(this, from);
-    return 0;
-}
-int Heap_realloc(Heap* this, int new_cap) {
-    if (new_cap <= this->cap) return 0;
-    this->cap = new_cap;
-    Node* temp = this->data;
-    this->data = (Node*)malloc(sizeof(Node) * new_cap);
-    for (int i = 0; i < this->n; i++) this->data[i] = temp[i];
-    if (temp != NULL) free(temp);
     return 0;
 }

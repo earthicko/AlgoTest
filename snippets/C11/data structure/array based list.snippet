@@ -1,33 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Item {
+typedef struct ListItem {
     int data;
-} Item;
+} ListItem;
 
 typedef struct List {
     int n, cap;
-    Item* items;
-    int (*append)(struct List*, Item);
-    int (*insert)(struct List*, Item, int);
-    Item (*pop)(struct List*, int);
-    Item (*peek)(struct List*, int);
+    ListItem* items;
+    int (*append)(struct List*, ListItem);
+    int (*insert)(struct List*, ListItem, int);
+    ListItem (*pop)(struct List*, int);
+    ListItem (*peek)(struct List*, int);
     int (*resize)(struct List*, int);
 } List;
 
 List* List__init__(int cap_);
 int List__del__(List* del);
-int List_resize(List* this, int cap_);
-int List_append(List* this, Item new);
-int List_insert(List* this, Item new, int idx);
-Item List_pop(List* this, int idx);
-Item List_peek(List* this, int idx);
+int List_append(List* this, ListItem new);
+int List_insert(List* this, ListItem new, int idx);
+ListItem List_pop(List* this, int idx);
+ListItem List_peek(List* this, int idx);
 
 List* List__init__(int cap_) {
     List* new = (List*)malloc(sizeof(List));
     new->n = 0;
     new->cap = cap_;
-    new->items = (Item*)malloc(sizeof(Item) * cap_);
+    new->items = (ListItem*)malloc(sizeof(ListItem) * cap_);
     new->append = List_append;
     new->insert = List_insert;
     new->pop = List_pop;
@@ -41,20 +40,18 @@ int List__del__(List* del) {
     return 0;
 }
 int List_resize(List* this, int cap_) {
-    Item* temp = this->items;
-    this->items = (Item*)malloc(sizeof(Item) * cap_);
-    for (int i = 0; i < this->n; i++) this->items[i] = temp[i];
-    free(temp);
+    if (this->cap >= cap_) return -1;
     this->cap = cap_;
+    this->items = (ListItem*)realloc(this->items, cap_);
     return 0;
 }
-int List_append(List* this, Item new) {
+int List_append(List* this, ListItem new) {
     if (this->n == this->cap) List_resize(this, this->cap * 2);
     this->items[this->n] = new;
     this->n++;
     return 0;
 }
-int List_insert(List* this, Item new, int idx) {
+int List_insert(List* this, ListItem new, int idx) {
     if (this->n == this->cap) List_resize(this, this->cap * 2);
     idx = idx % this->n;
     for (int i = this->n - 1; i >= idx; i--)
@@ -63,14 +60,14 @@ int List_insert(List* this, Item new, int idx) {
     this->n++;
     return 0;
 }
-Item List_pop(List* this, int idx) {
+ListItem List_pop(List* this, int idx) {
     idx = idx % this->n;
-    Item output = this->items[idx];
+    ListItem output = this->items[idx];
     this->n--;
     for (int i = idx; i < this->n; i++) this->items[i] = this->items[i + 1];
     return output;
 }
-Item List_peek(List* this, int idx) {
+ListItem List_peek(List* this, int idx) {
     idx = idx % this->n;
     return this->items[idx];
 }
