@@ -1,0 +1,82 @@
+#include <stdio.h>
+
+typedef long long ll;
+
+ll A, B;
+ll POW_2[55];
+
+ll get_total_1_2pow(ll exp);
+ll get_total_1_from_0_to_n(ll upper_lim, ll exp_lim);
+ll get_total_1_from_n_to_2pow(ll lower_lim, ll exp);
+
+int main() {
+    ll base = 1;
+    ll exp = 0;
+    for (exp = 0; exp < 55; exp++) POW_2[exp] = base, base *= 2;
+
+    scanf("%lld%lld", &A, &B);
+    B++;
+
+    ll upper_lim = 1, lower_lim = 1;
+    ll upper_lim_2exp = 0, lower_lim_2exp = 0;
+    while (lower_lim < A) lower_lim *= 2, lower_lim_2exp++;
+    while (upper_lim < B) upper_lim *= 2, upper_lim_2exp++;
+
+    ll total_n_1 = get_total_1_2pow(upper_lim_2exp);
+    total_n_1 -= get_total_1_from_0_to_n(A, upper_lim_2exp);
+    total_n_1 -= get_total_1_from_n_to_2pow(B, upper_lim_2exp);
+
+    printf("%lld", total_n_1);
+
+    return 0;
+}
+
+ll get_total_1_2pow(ll exp) {
+    ll lim = POW_2[exp];
+    ll result = lim * (ll)exp / 2;
+    return result;
+}
+ll get_total_1_from_0_to_n(ll upper_lim, ll exp_lim) {
+    ll result = 0;
+    for (ll i = 0; i < exp_lim; i++) {
+        ll chunk_size = POW_2[i + 1];
+
+        ll n_chunk_full = upper_lim / chunk_size;
+        ll n_chunk_partial = 0;
+        if (upper_lim % chunk_size) n_chunk_partial = 1;
+
+        ll n_0_per_chunk = chunk_size / 2;
+        ll n_0_in_partial_chunk = 0;
+        if (n_chunk_partial) {
+            ll start_1 = chunk_size * n_chunk_full + n_0_per_chunk;
+            n_0_in_partial_chunk = upper_lim - start_1;
+            if (n_0_in_partial_chunk < 0) n_0_in_partial_chunk = 0;
+        }
+        result += (n_chunk_full * n_0_per_chunk + n_0_in_partial_chunk);
+    }
+    return result;
+}
+ll get_total_1_from_n_to_2pow(ll lower_lim, ll exp_lim) {
+    ll range_size = POW_2[exp_lim] - lower_lim;
+    ll result = 0;
+    for (ll i = 0; i < exp_lim; i++) {
+        ll chunk_size = POW_2[i + 1];
+
+        ll n_chunk_full = range_size / chunk_size;
+        ll n_chunk_partial = 0;
+        if (range_size % chunk_size) n_chunk_partial = 1;
+
+        ll n_0_per_chunk = chunk_size / 2;
+        ll n_0_in_partial_chunk = 0;
+        if (n_chunk_partial) {
+            ll start_1 =
+                POW_2[exp_lim] - chunk_size * n_chunk_full - n_0_per_chunk;
+            ll n_deducted = start_1 - lower_lim;
+
+            n_0_in_partial_chunk = n_0_per_chunk;
+            if (n_deducted <= 0) n_0_in_partial_chunk += n_deducted;
+        }
+        result += (n_chunk_full * n_0_per_chunk + n_0_in_partial_chunk);
+    }
+    return result;
+}

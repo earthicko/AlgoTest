@@ -1,0 +1,52 @@
+#include <stdio.h>
+#define N_MAX 100000
+
+int T, N, NUM_ALONE;
+int TO[N_MAX];
+int VISITED[N_MAX], FINISHED[N_MAX], ORDER_CNT, ORDER[N_MAX];
+
+int do_dfs(int s);
+
+int main() {
+    scanf("%d", &T);
+    while (T--) {
+        scanf("%d", &N);
+
+        ORDER_CNT = 0;
+        NUM_ALONE = N;
+
+        for (int n = 0; n < N; n++) {
+            scanf("%d", &TO[n]);
+            TO[n]--;
+            VISITED[n] = 0;
+            FINISHED[n] = 0;
+            ORDER[n] = 0;
+        }
+
+        for (int n = 0; n < N; n++) {
+            if (!FINISHED[n]) {
+                VISITED[n] = 1;
+                do_dfs(n);
+            }
+        }
+
+        printf("%d\n", NUM_ALONE);
+    }
+    return 0;
+}
+
+int do_dfs(int s) {
+    ORDER_CNT++;
+    ORDER[s] = ORDER_CNT;
+    if (!VISITED[TO[s]]) {
+        VISITED[TO[s]] = 1;
+        do_dfs(TO[s]);
+    } else if (VISITED[TO[s]] && FINISHED[TO[s]] == 0) {
+        // printf("order of e: %d, order of i: %d\n", ORDER[TO[s]], ORDER[s]);
+        int num_cycle = ORDER[s] - ORDER[TO[s]] + 1;
+        // printf("Subtract %d\n", num_cycle);
+        NUM_ALONE -= num_cycle;
+    }
+    FINISHED[s] = 1;
+    return 0;
+}

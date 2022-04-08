@@ -1,0 +1,38 @@
+#include <stdio.h>
+
+typedef long long ll;
+
+ll A, B;
+ll POW_2[55];
+
+ll get_n_1_0_to_n(ll n);
+
+int main() {
+    int exp = 0;
+    ll base = 1;
+    while (exp < 55) POW_2[exp] = base, base *= 2, exp++;
+
+    scanf("%lld%lld", &A, &B);
+    ll result = get_n_1_0_to_n(B) - get_n_1_0_to_n(A - 1);
+    printf("%lld\n", result);
+    return 0;
+}
+
+ll get_n_1_0_to_n(ll n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+
+    ll largest_2_pow_lower_than_n = 1;
+    ll exp_2 = 0;
+    while (largest_2_pow_lower_than_n < n)
+        largest_2_pow_lower_than_n *= 2, exp_2++;
+    // largest is now >= n
+    if (largest_2_pow_lower_than_n > n)
+        largest_2_pow_lower_than_n /= 2, exp_2--;
+
+    ll n_1_on_msb = n - largest_2_pow_lower_than_n + 1;
+    ll n_1_below_msb = POW_2[exp_2 - 1] * exp_2;
+    ll result = n_1_on_msb + n_1_below_msb +
+                get_n_1_0_to_n(n - largest_2_pow_lower_than_n);
+    return result;
+}

@@ -1,0 +1,99 @@
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef int QueueItem;
+typedef struct Queue {
+    int n, cap, head;
+    QueueItem* items;
+} Queue;
+Queue* Queue__init__(int cap_);
+int Queue__del__(Queue* this);
+int Queue_push(Queue* this, QueueItem item);
+QueueItem Queue_pop(Queue* this);
+
+#define N_MAX 1000
+
+int N, M;
+int EDGE[N_MAX][N_MAX], N_DEPART[N_MAX], N_ARRIVE[N_MAX];
+int N_FOUND = 0, FOUND[N_MAX];
+
+int main() {
+    scanf("%d%d", &N, &M);
+    for (int m = 0; m < M; m++) {
+        int n_edge;
+        scanf("%d", &n_edge);
+
+        int* chain = (int*)malloc(sizeof(int) * n_edge);
+        for (int i = 0; i < n_edge; i++) scanf("%d", &chain[i]);
+        for (int i = 0; i < n_edge - 1; i++) {
+            int s = chain[i], e = chain[i + 1];
+            s--, e--;
+            EDGE[s][N_DEPART[s]] = e;
+            N_DEPART[s]++;
+            N_ARRIVE[e]++;
+        }
+        free(chain);
+    }
+
+    Queue* zero_arrival = Queue__init__(N + 2);
+    for (int i = 0; i < N; i++)
+        if (N_ARRIVE[i] == 0) Queue_push(zero_arrival, i);
+
+    for (int counter = 0; counter < N; counter++) {
+        if (zero_arrival->n == 0) {
+            printf("0\n");
+            return 0;
+        }
+        int here = Queue_pop(zero_arrival);
+        FOUND[N_FOUND++] = here;
+
+        for (int i = 0; i < N_DEPART[here]; i++) {
+            int there = EDGE[here][i];
+            if (N_ARRIVE[there] > 0) N_ARRIVE[there]--;
+            if (N_ARRIVE[there] == 0) Queue_push(zero_arrival, there);
+        }
+    }
+
+    for (int i = 0; i < N_FOUND; i++) printf("%d\n", FOUND[i] + 1);
+
+    return 0;
+}
+
+Queue* Queue__init__(int cap_) {
+    Queue* queue = (Queue*)malloc(sizeof(Queue));
+    queue->n = 0;
+    queue->cap = cap_;
+    queue->head = 0;
+    queue->items = (QueueItem*)malloc(sizeof(QueueItem) * cap_);
+    return queue;
+}
+int Queue__del__(Queue* this) {
+    free(this->items);
+    free(this);
+    return 0;
+}
+int Queue_resize(Queue* this, int cap_) {
+    QueueItem* linear = (QueueItem*)malloc(sizeof(QueueItem) * this->n);
+    for (int i = 0; i < this->n; i++)
+        linear[i] = this->items[(this->head + i + 1) % this->cap];
+    free(this->items);
+    this->items = (QueueItem*)malloc(sizeof(QueueItem) * cap_);
+    for (int i = 0; i < this->n; i++) this->items[i] = linear[i];
+    free(linear);
+    this->head = cap_ - 1;
+    this->cap = cap_;
+    return 0;
+}
+int Queue_push(Queue* this, QueueItem item) {
+    if (this->n == this->cap) Queue_resize(this, this->cap * 2);
+    this->n++;
+    this->items[(this->head + this->n) % this->cap] = item;
+    return 0;
+}
+QueueItem Queue_pop(Queue* this) {
+    assert(this->n > 0);
+    this->head = (this->head + 1) % this->cap;
+    this->n--;
+    return this->items[this->head];
+}

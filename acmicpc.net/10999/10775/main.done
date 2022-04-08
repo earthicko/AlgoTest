@@ -1,0 +1,36 @@
+#include <stdio.h>
+#define N_MAX 100001
+
+int G, P;
+int SHOULD_DOCK_BELOW[N_MAX];
+int PARENT[N_MAX];
+
+int find(int u) {
+    if (PARENT[u] == u) return u;
+    PARENT[u] = find(PARENT[u]);
+    return PARENT[u];
+}
+
+int merge(int u, int v) {
+    PARENT[v] = u;
+    return 0;
+}
+
+int main() {
+    scanf("%d%d", &G, &P);
+
+    for (int g = 0; g <= G; g++) PARENT[g] = g;
+
+    for (int p = 0; p < P; p++) scanf("%d", &SHOULD_DOCK_BELOW[p]);
+
+    for (int p = 0; p < P; p++) {
+        int dock_below = find(SHOULD_DOCK_BELOW[p]);
+        if (dock_below == 0) {
+            printf("%d\n", p);
+            return 0;
+        }
+        merge(dock_below - 1, dock_below);
+    }
+    printf("%d\n", P);
+    return 0;
+}

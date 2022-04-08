@@ -1,0 +1,26 @@
+#include <stdio.h>
+#define N_MAX 100000
+
+int G, P;
+int DOCKED[N_MAX], SHOULD_DOCK_BELOW[N_MAX], CAN_DOCK_FROM[N_MAX];
+
+int main() {
+    scanf("%d%d", &G, &P);
+    for (int g = 0; g < G; g++) CAN_DOCK_FROM[g] = g;
+    for (int p = 0; p < P; p++) {
+        scanf("%d", &SHOULD_DOCK_BELOW[p]);
+        SHOULD_DOCK_BELOW[p]--;
+    }
+    for (int p = 0; p < P; p++) {
+        int dock_at = CAN_DOCK_FROM[SHOULD_DOCK_BELOW[p]];
+        while (DOCKED[dock_at] == 1 && dock_at >= 0) dock_at--;
+        if (dock_at < 0) {
+            printf("%d\n", p);
+            return 0;
+        }
+        DOCKED[dock_at] = 1;
+        CAN_DOCK_FROM[SHOULD_DOCK_BELOW[p]] = dock_at - 1;
+    }
+    printf("%d\n", P);
+    return 0;
+}
