@@ -1,0 +1,240 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct State {
+    int **n;
+} State;
+typedef struct Dir {
+    int r, c;
+} Dir;
+
+int N;
+const int DEPTH_MAX = 5;
+const Dir dirs[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+int VAL_MAX = 0;
+
+State copy_state(State orig);
+State move(State from, Dir dir);
+State merge(State from, Dir dir);
+int do_dfs(State from, int depth);
+int print_state(State this) {
+    for (int r = 0; r < N; r++) {
+        for (int c = 0; c < N; c++) printf("%d ", this.n[r][c]);
+        printf("\n");
+    }
+    return 0;
+}
+
+int main() {
+    scanf("%d", &N);
+    State root;
+    root.n = (int **)malloc(sizeof(int *) * N);
+    for (int i = 0; i < N; i++) root.n[i] = (int *)malloc(sizeof(int) * N);
+
+    for (int r = 0; r < N; r++)
+        for (int c = 0; c < N; c++) scanf("%d", &(root.n[r][c]));
+
+    do_dfs(root, 0);
+
+    // int i;
+    // scanf("%d", &i);
+    // merge(root, dirs[i]);
+    // move(root, dirs[i]);
+    // print_state(root);
+
+    printf("%d\n", VAL_MAX);
+
+    return 0;
+}
+
+int do_dfs(State from, int depth) {
+    if (depth == DEPTH_MAX) {
+        for (int r = 0; r < N; r++)
+            for (int c = 0; c < N; c++)
+                if (VAL_MAX < from.n[r][c]) VAL_MAX = from.n[r][c];
+        return 0;
+    }
+    depth++;
+    for (int i = 0; i < 4; i++) {
+        State altered = copy_state(from);
+        merge(altered, dirs[i]);
+        move(altered, dirs[i]);
+        do_dfs(altered, depth);
+    }
+    return 0;
+}
+
+State merge(State from, Dir dir) {
+    if (dir.c == 0) {
+        if (dir.r == 1) {
+            for (int c = 0; c < N; c++) {
+                // printf("Checking column %d\n", c);
+
+                for (int r_pivot = N - 1; r_pivot >= 1; r_pivot--) {
+                    if (from.n[r_pivot][c] == 0) continue;
+
+                    // printf("From pivot row %d\n", r_pivot);
+
+                    for (int r_cmp = r_pivot - 1; r_cmp >= 0; r_cmp--) {
+                        if (from.n[r_cmp][c] == 0) continue;
+                        if (from.n[r_pivot][c] != from.n[r_cmp][c]) break;
+
+                        // printf("Merge with row %d\n", r_cmp);
+
+                        from.n[r_pivot][c] *= 2;
+                        from.n[r_cmp][c] = 0;
+                        r_pivot = r_cmp;
+
+                        // printf("After merge:\n");
+                        // print_state(from);
+                    }
+                }
+            }
+        } else {
+            for (int c = 0; c < N; c++) {
+                // printf("Checking column %d\n", c);
+
+                for (int r_pivot = 0; r_pivot < N - 1; r_pivot++) {
+                    if (from.n[r_pivot][c] == 0) continue;
+
+                    // printf("From pivot row %d\n", r_pivot);
+
+                    for (int r_cmp = r_pivot + 1; r_cmp < N; r_cmp++) {
+                        if (from.n[r_cmp][c] == 0) continue;
+                        if (from.n[r_pivot][c] != from.n[r_cmp][c]) break;
+
+                        // printf("Merge with row %d\n", r_cmp);
+
+                        from.n[r_pivot][c] *= 2;
+                        from.n[r_cmp][c] = 0;
+                        r_pivot = r_cmp;
+
+                        // printf("After merge:\n");
+                        // print_state(from);
+                    }
+                }
+            }
+        }
+    } else {
+        if (dir.c == 1) {
+            for (int r = 0; r < N; r++) {
+                // printf("Checking row %d\n", r);
+
+                for (int c_pivot = N - 1; c_pivot >= 1; c_pivot--) {
+                    if (from.n[r][c_pivot] == 0) continue;
+
+                    // printf("From pivot column %d\n", c_pivot);
+
+                    for (int c_cmp = c_pivot - 1; c_cmp >= 0; c_cmp--) {
+                        if (from.n[r][c_cmp] == 0) continue;
+                        if (from.n[r][c_pivot] != from.n[r][c_cmp]) break;
+
+                        // printf("Merge with column %d\n", c_cmp);
+
+                        from.n[r][c_pivot] *= 2;
+                        from.n[r][c_cmp] = 0;
+                        c_pivot = c_cmp;
+
+                        // printf("After merge:\n");
+                        // print_state(from);
+                    }
+                }
+            }
+        } else {
+            for (int r = 0; r < N; r++) {
+                // printf("Checking row %d\n", r);
+
+                for (int c_pivot = 0; c_pivot < N - 1; c_pivot++) {
+                    if (from.n[r][c_pivot] == 0) continue;
+
+                    // printf("From pivot column %d\n", c_pivot);
+
+                    for (int c_cmp = c_pivot + 1; c_cmp < N; c_cmp++) {
+                        if (from.n[r][c_cmp] == 0) continue;
+                        if (from.n[r][c_pivot] != from.n[r][c_cmp]) break;
+
+                        // printf("Merge with column %d\n", c_cmp);
+                        from.n[r][c_pivot] *= 2;
+                        from.n[r][c_cmp] = 0;
+                        c_pivot = c_cmp;
+
+                        // printf("After merge:\n");
+                        // print_state(from);
+                    }
+                }
+            }
+        }
+    }
+    return from;
+}
+
+State move(State from, Dir dir) {
+    if (dir.c == 0) {
+        if (dir.r == 1) {
+            for (int c = 0; c < N; c++) {
+                for (int r_vacant = N - 1; r_vacant >= 1; r_vacant--) {
+                    if (from.n[r_vacant][c] != 0) continue;
+                    for (int r_full = r_vacant - 1; r_full >= 0; r_full--) {
+                        if (from.n[r_full][c] != 0) {
+                            from.n[r_vacant][c] = from.n[r_full][c];
+                            from.n[r_full][c] = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int c = 0; c < N; c++) {
+                for (int r_vacant = 0; r_vacant < N - 1; r_vacant++) {
+                    if (from.n[r_vacant][c] != 0) continue;
+                    for (int r_full = r_vacant + 1; r_full < N; r_full++) {
+                        if (from.n[r_full][c] != 0) {
+                            from.n[r_vacant][c] = from.n[r_full][c];
+                            from.n[r_full][c] = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        if (dir.c == 1) {
+            for (int r = 0; r < N; r++) {
+                for (int c_vacant = N - 1; c_vacant >= 1; c_vacant--) {
+                    if (from.n[r][c_vacant] != 0) continue;
+                    for (int c_full = c_vacant - 1; c_full >= 0; c_full--) {
+                        if (from.n[r][c_full] != 0) {
+                            from.n[r][c_vacant] = from.n[r][c_full];
+                            from.n[r][c_full] = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int r = 0; r < N; r++) {
+                for (int c_vacant = 0; c_vacant < N - 1; c_vacant++) {
+                    if (from.n[r][c_vacant] != 0) continue;
+                    for (int c_full = c_vacant + 1; c_full < N; c_full++) {
+                        if (from.n[r][c_full] != 0) {
+                            from.n[r][c_vacant] = from.n[r][c_full];
+                            from.n[r][c_full] = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return from;
+}
+
+State copy_state(State orig) {
+    State copy;
+    copy.n = (int **)malloc(sizeof(int *) * N);
+    for (int r = 0; r < N; r++) {
+        copy.n[r] = (int *)malloc(sizeof(int) * N);
+        for (int c = 0; c < N; c++) copy.n[r][c] = orig.n[r][c];
+    }
+    return copy;
+}

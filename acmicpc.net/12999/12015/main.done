@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define N_MAX 1000001
+#define INF __INT32_MAX__
+
+int N;
+int NUMBERS[N_MAX];
+int TAIL_OF_LIS_OF_L[N_MAX];
+
+int lower_bound(int arr[], int NMEMB, int X) {
+    int mid, low = 0, high = NMEMB;
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        if (X <= arr[mid])
+            high = mid;
+        else
+            low = mid + 1;
+    }
+    if (low < NMEMB && arr[low] < X) low++;
+    return low;
+}
+
+int main() {
+    scanf("%d", &N);
+    for (int i = 1; i <= N; i++) scanf("%d", &NUMBERS[i]);
+    for (int i = 1; i <= N; i++) TAIL_OF_LIS_OF_L[i] = INF;
+
+    int max = 0;
+    for (int i = 1; i <= N; i++) {
+        int idx = lower_bound(TAIL_OF_LIS_OF_L, N, NUMBERS[i]);
+        TAIL_OF_LIS_OF_L[idx] = NUMBERS[i];
+        if (max < idx) max = idx;
+    }
+
+    printf("%d\n", max);
+
+    return 0;
+}
