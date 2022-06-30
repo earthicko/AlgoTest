@@ -1,0 +1,106 @@
+#include <iostream>
+#include <queue>
+#include <set>
+#include <string>
+#include <vector>
+
+#define N_MAX 1000
+
+using namespace std;
+
+const int WALL = -1;
+const int EMPTY = 0;
+const int DIR[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+int N, M;
+int MAP[N_MAX][N_MAX];
+int ID_CUR = 1;
+vector<int> N_ZERO_PER_ID;
+
+int count_zeros(int row, int col);
+int count_adjacent_islands(int row, int col);
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+
+    cin >> N >> M;
+    for (int i = 0; i < N; i++) {
+        string map_line;
+        cin >> map_line;
+        for (int j = 0; j < M; j++) {
+            MAP[i][j] = map_line[j] - '0';
+            if (MAP[i][j] == 1) MAP[i][j] = WALL;
+        }
+    }
+
+    N_ZERO_PER_ID.push_back(0);
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            if (MAP[i][j] == EMPTY) count_zeros(i, j);
+        }
+    }
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < M; j++) {
+            if (MAP[i][j] == WALL)
+                cout << count_adjacent_islands(i, j);
+            else
+                cout << '0';
+        }
+        cout << '\n';
+    }
+    return 0;
+}
+
+int count_zeros(int row, int col) {
+    queue<pair<int, int>> q;
+    q.push(make_pair(row, col));
+
+    // cout << "Count zero from (" << row << ", " << col << ") with id " <<
+    // ID_CUR
+    //      << '\n';
+    MAP[row][col] = ID_CUR;
+    int n_zeros = 1;
+    while (q.empty() == 0) {
+        int r = q.front().first;
+        int c = q.front().second;
+        q.pop();
+        for (int i = 0; i < 4; i++) {
+            int nr = r + DIR[i][0];
+            int nc = c + DIR[i][1];
+            if (nr < 0 || nr >= N || nc < 0 || nc >= M) continue;
+            if (MAP[nr][nc] != EMPTY) continue;
+            MAP[nr][nc] = ID_CUR;
+            n_zeros++;
+            q.push(make_pair(nr, nc));
+        }
+    }
+    // cout << "Counted " << n_zeros << " zeros with id " << ID_CUR << '\n';
+    N_ZERO_PER_ID.push_back(n_zeros);
+    ID_CUR++;
+    return 0;
+}
+int count_adjacent_islands(int row, int col) {
+    // cout << "count_adjacent_islands from (" << row << ", " << col << ")\n";
+    int n_zeros = 1;
+    vector<int> ids;
+    for (int i = 0; i < 4; i++) {
+        int nr = row + DIR[i][0];
+        int nc = col + DIR[i][1];
+        if (nr < 0 || nr >= N || nc < 0 || nc >= M) continue;
+        if (MAP[nr][nc] == WALL) continue;
+        int dup_id = 0;
+        for (int j = 0; j < ids.size(); j++) {
+            if (ids[j] == MAP[nr][nc]) {
+                dup_id = 1;
+                break;
+            }
+        }
+        if (dup_id) continue;
+        ids.push_back(MAP[nr][nc]);
+        n_zeros += N_ZERO_PER_ID[MAP[nr][nc]];
+    }
+    return (n_zeros % 10);
+}
