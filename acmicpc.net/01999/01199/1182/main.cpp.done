@@ -1,0 +1,24 @@
+#include <stdio.h>
+
+#include <iostream>
+
+int N, S, NUM[20], N_MATCH;
+
+void partial_sum(int prev_sum, int cursor) {
+    // printf("cursor %d prev sum %d\n", cursor, prev_sum);
+    if (cursor == N) {
+        if (prev_sum == S) N_MATCH++;
+        return;
+    }
+    partial_sum(prev_sum + NUM[cursor], cursor + 1);
+    partial_sum(prev_sum, cursor + 1);
+}
+
+int main() {
+    std::cin >> N >> S;
+    for (int i = 0; i < N; i++) std::cin >> NUM[i];
+    partial_sum(0, 0);
+    if (S == 0) N_MATCH--;
+    printf("%d\n", N_MATCH);
+    return 0;
+}

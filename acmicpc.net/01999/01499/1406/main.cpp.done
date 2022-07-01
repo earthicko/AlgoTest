@@ -1,0 +1,103 @@
+#include <iostream>
+#include <string>
+
+typedef struct node_ {
+    char data;
+    struct node_ *prev;
+    struct node_ *next;
+} node;
+
+node start, end, cursor;
+
+void command_l() {
+    if (cursor.prev == &start) return;
+    node *a = cursor.prev->prev;
+    node *b = cursor.prev;
+    node *c = cursor.next;
+    a->next = &cursor;
+    cursor.prev = a;
+    cursor.next = b;
+    b->prev = &cursor;
+    b->next = c;
+    c->prev = b;
+}
+void command_d() {
+    if (cursor.next == &end) return;
+    node *a = cursor.prev;
+    node *b = cursor.next;
+    node *c = cursor.next->next;
+    a->next = b;
+    b->prev = a;
+    b->next = &cursor;
+    cursor.prev = b;
+    cursor.next = c;
+    c->prev = &cursor;
+}
+void command_b() {
+    if (cursor.prev == &start) return;
+    node *deleted = cursor.prev;
+    deleted->prev->next = deleted->next;
+    deleted->next->prev = deleted->prev;
+    free(deleted);
+}
+void command_p(char c) {
+    node *new_node = (node *)malloc(sizeof(node));
+    new_node->data = c;
+    new_node->prev = cursor.prev;
+    new_node->next = &cursor;
+
+    new_node->prev->next = new_node;
+    new_node->next->prev = new_node;
+}
+
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
+
+    start.data = '!';
+    start.prev = NULL;
+    start.next = &cursor;
+    cursor.data = '-';
+    cursor.prev = &start;
+    cursor.next = &end;
+    end.data = '!';
+    end.next = NULL;
+    end.prev = &cursor;
+
+    std::string orig;
+    std::cin >> orig;
+    for (int i = 0; i < orig.length(); i++) command_p(orig[i]);
+
+    int n_command;
+    std::cin >> n_command;
+    for (int i = 0; i < n_command; i++) {
+        std::string command;
+        std::cin >> command;
+
+        switch (command[0]) {
+            case 'L':
+                command_l();
+                break;
+            case 'D':
+                command_d();
+                break;
+            case 'B':
+                command_b();
+                break;
+            case 'P':
+                std::cin >> command;
+                command_p(command[0]);
+                break;
+            default:
+                break;
+        }
+    }
+    node *cur = start.next;
+    while (cur != &end) {
+        if (cur->data != '-') std::cout << cur->data;
+        cur = cur->next;
+    }
+
+    return 0;
+}

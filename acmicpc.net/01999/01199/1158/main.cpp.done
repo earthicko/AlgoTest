@@ -1,0 +1,23 @@
+#include <iostream>
+int N, K, OUT[5000];
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
+    std::cin >> N >> K;
+    std::cout << "<";
+    int cursor = -1;
+    for (int i = 0; i < N; i++) {
+        int n_move_left = K;
+        while (n_move_left > 0) {
+            cursor++;
+            if (cursor == N) cursor = 0;
+            if (OUT[cursor] == 0) n_move_left--;
+        }
+        OUT[cursor] = 1;
+        std::cout << cursor + 1;
+        if (i < N - 1) std::cout << ", ";
+    }
+    std::cout << ">";
+    return 0;
+}

@@ -1,0 +1,38 @@
+#include <iostream>
+
+int k, s[49], picked[49];
+
+void print_comb() {
+    for (int i = 0; i < k; i++)
+        if (picked[i] == 1) std::cout << s[i] << ' ';
+    std::cout << '\n';
+}
+
+int comb(int cursor, int n_picked) {
+    if (n_picked == 6) {
+        print_comb();
+        return 0;
+    }
+    if (cursor == k) return -1;
+    picked[cursor] = 1;
+    comb(cursor + 1, n_picked + 1);
+    picked[cursor] = 0;
+    comb(cursor + 1, n_picked);
+    return 0;
+}
+
+int main() {
+    int first_line = 1;
+    while (1) {
+        std::cin >> k;
+        if (k == 0) break;
+        if (!first_line) std::cout << '\n';
+        for (int i = 0; i < k; i++) {
+            std::cin >> s[i];
+            picked[i] = 0;
+        }
+        comb(0, 0);
+        first_line = 0;
+    }
+    return 0;
+}
