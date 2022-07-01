@@ -1,0 +1,48 @@
+#include <iostream>
+#include <map>
+
+#define N_MAX 40
+
+typedef long long ll;
+
+int N, S;
+int NUM[N_MAX];
+std::map<int, int> N_PARTIAL_SUM;
+ll N_MATCH = 0;
+
+int map_n_sum(int i_from, int prev_sum) {
+    if (i_from == N) {
+        N_PARTIAL_SUM[prev_sum]++;
+    } else {
+        map_n_sum(i_from + 1, prev_sum + NUM[i_from]);
+        map_n_sum(i_from + 1, prev_sum);
+    }
+    return 0;
+}
+
+int match_sum_of(int i_from, int prev_sum) {
+    if (i_from == N / 2) {
+        N_MATCH += N_PARTIAL_SUM[S - prev_sum];
+    } else {
+        match_sum_of(i_from + 1, prev_sum + NUM[i_from]);
+        match_sum_of(i_from + 1, prev_sum);
+    }
+    return 0;
+}
+
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cout.tie(NULL);
+    std::cin.tie(NULL);
+
+    std::cin >> N >> S;
+    for (int i = 0; i < N; i++) std::cin >> NUM[i];
+
+    map_n_sum(N / 2, 0);
+    match_sum_of(0, 0);
+    if (S == 0) N_MATCH--;
+
+    std::cout << N_MATCH << '\n';
+
+    return 0;
+}

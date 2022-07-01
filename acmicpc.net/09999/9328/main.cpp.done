@@ -1,0 +1,116 @@
+#include <iostream>
+#include <queue>
+#include <string>
+
+#define R_MAX 102
+
+const char VOID = '.', WALL = '*', DOCX = '$', DONE = ',';
+const char DOOR_S = 'A', DOOR_E = 'Z', KEY_S = 'a', KEY_E = 'z';
+const int DIR[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+int HAS_KEY[KEY_E - KEY_S + 1];
+int R, C;
+char MAP[R_MAX][R_MAX];
+int N_DOC_FOUND;
+
+void print_map() {
+    for (int r = 0; r < R; r++) {
+        for (int c = 0; c < C; c++) std::cout << MAP[r][c];
+        std::cout << std::endl;
+    }
+}
+
+void search_items() {
+    std::queue<std::pair<int, int>> q;
+    q.push(std::make_pair(0, 0));
+
+    while (!q.empty()) {
+        int r = q.front().first, c = q.front().second;
+        q.pop();
+
+        for (int i = 0; i < 4; i++) {
+            int nr = r + DIR[i][0], nc = c + DIR[i][1];
+            if (nr < 0 || nr >= R || nc < 0 || nc >= C) continue;
+            char here = MAP[nr][nc];
+            if (here == WALL || (DOOR_S <= here && here <= DOOR_E) ||
+                here == DONE)
+                continue;
+            if (here == DOCX) N_DOC_FOUND++;
+            if (KEY_S <= here && here <= KEY_E) {
+                HAS_KEY[here - KEY_S] = 1;
+                // std::cout << "Found key " << here << std::endl;
+            }
+            MAP[nr][nc] = DONE;
+            q.push(std::make_pair(nr, nc));
+        }
+    }
+}
+
+int open_doors() {
+    int door_opened = 0;
+    std::queue<std::pair<int, int>> q;
+    q.push(std::make_pair(0, 0));
+
+    while (!q.empty()) {
+        int r = q.front().first, c = q.front().second;
+        q.pop();
+
+        for (int i = 0; i < 4; i++) {
+            int nr = r + DIR[i][0], nc = c + DIR[i][1];
+            if (nr < 0 || nr >= R || nc < 0 || nc >= C) continue;
+            char here = MAP[nr][nc];
+            if (!(here == DONE || (DOOR_S <= here && here <= DOOR_E))) continue;
+            if (DOOR_S <= here && here <= DOOR_E) {
+                if (HAS_KEY[here - DOOR_S] == 0)
+                    continue;
+                else
+                    door_opened = 1;
+            }
+            MAP[nr][nc] = VOID;
+            q.push(std::make_pair(nr, nc));
+        }
+    }
+
+    return door_opened;
+}
+
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
+
+    int N;
+    std::cin >> N;
+    for (int n = 0; n < N; n++) {
+        std::cin >> R >> C;
+        R += 2, C += 2;
+        for (int c = 0; c < C; c++) {
+            MAP[0][c] = VOID;
+            MAP[R - 1][c] = VOID;
+        }
+        for (int r = 1; r < R - 1; r++) {
+            std::string line;
+            std::cin >> line;
+            MAP[r][0] = VOID;
+            MAP[r][C - 1] = VOID;
+            for (int c = 0; c < C - 2; c++) MAP[r][c + 1] = line[c];
+        }
+        for (int i = 0; i < KEY_E - KEY_S + 1; i++) HAS_KEY[i] = 0;
+        std::string keys;
+        std::cin >> keys;
+        if (keys[0] != '0') {
+            for (int i = 0; i < keys.length(); i++)
+                HAS_KEY[keys[i] - KEY_S] = 1;
+        }
+
+        N_DOC_FOUND = 0;
+        while (1) {
+            search_items();
+            // std::cout << "After search:" << std::endl;
+            // print_map();
+            if (open_doors() == 0) break;
+            // std::cout << "After door opening:" << std::endl;
+            // print_map();
+        }
+        std::cout << N_DOC_FOUND << std::endl;
+    }
+}

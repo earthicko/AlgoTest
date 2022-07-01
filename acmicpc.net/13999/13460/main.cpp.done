@@ -1,0 +1,340 @@
+#include <iostream>
+#include <limits>
+#include <string>
+
+#define N_MAX 10
+
+typedef struct map_ {
+    char board[N_MAX][N_MAX];
+    int r_coord[2], b_coord[2];
+    int r_exit, b_exit;
+} map;
+
+int N, M;
+const char WALL = '#';
+const char VOID = '.';
+const char REDB = 'R';
+const char BLUB = 'B';
+const char EXIT = 'O';
+const char L = 'l', R = 'r', U = 'u', D = 'd';
+
+map move_l(map prev);
+map move_r(map prev);
+map move_u(map prev);
+map move_d(map prev);
+
+int do_dfs(map stat, int n_move, char prev_move);
+
+void print_map(map *stat) {
+    for (int n = 0; n < N; n++) {
+        for (int m = 0; m < M; m++) std::cout << stat->board[n][m];
+        std::cout << std::endl;
+    }
+}
+
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
+
+    map init;
+    init.r_exit = 0;
+    init.b_exit = 0;
+    std::cin >> N >> M;
+    for (int n = 0; n < N; n++) {
+        std::string line;
+        std::cin >> line;
+        for (int m = 0; m < M; m++) {
+            init.board[n][m] = line[m];
+            if (init.board[n][m] == REDB) {
+                init.r_coord[0] = n;
+                init.r_coord[1] = m;
+            }
+            if (init.board[n][m] == BLUB) {
+                init.b_coord[0] = n;
+                init.b_coord[1] = m;
+            }
+        }
+    }
+
+    int min_moves = do_dfs(init, 0, 'x');
+    if (min_moves == INT32_MAX) min_moves = -1;
+    std::cout << min_moves << '\n';
+
+    return 0;
+}
+
+int do_dfs(map stat, int n_move, char prev_move) {
+    if (n_move >= 10) return INT32_MAX;
+    int min_moves[4] = {INT32_MAX, INT32_MAX, INT32_MAX, INT32_MAX};
+    // std::cout << "n_move: " << n_move << " prev_move: " << prev_move
+    //           << std::endl;
+
+    map moved_l, moved_r, moved_u, moved_d;
+    if (prev_move != L) moved_l = move_l(stat);
+    if (prev_move != R) moved_r = move_r(stat);
+    if (prev_move != U) moved_u = move_u(stat);
+    if (prev_move != D) moved_d = move_d(stat);
+    n_move++;
+
+    // std::cout << "after L: \n";
+    // print_map(&moved_l);
+    // std::cout << "\n";
+    // std::cout << "after R: \n";
+    // print_map(&moved_r);
+    // std::cout << "\n";
+    // std::cout << "after U: \n";
+    // print_map(&moved_u);
+    // std::cout << "\n";
+    // std::cout << "after D: \n";
+    // print_map(&moved_d);
+    // std::cout << "\n";
+
+    if (prev_move != L) {
+        if (moved_l.b_exit == 0) {
+            if (moved_l.r_exit == 1)
+                return n_move;
+            else
+                min_moves[0] = do_dfs(moved_l, n_move, L);
+        }
+    }
+    if (prev_move != R) {
+        if (moved_r.b_exit == 0) {
+            if (moved_r.r_exit == 1)
+                return n_move;
+            else
+                min_moves[1] = do_dfs(moved_r, n_move, R);
+        }
+    }
+    if (prev_move != U) {
+        if (moved_u.b_exit == 0) {
+            if (moved_u.r_exit == 1)
+                return n_move;
+            else
+                min_moves[2] = do_dfs(moved_u, n_move, U);
+        }
+    }
+    if (prev_move != D) {
+        if (moved_d.b_exit == 0) {
+            if (moved_d.r_exit == 1)
+                return n_move;
+            else
+                min_moves[3] = do_dfs(moved_d, n_move, D);
+        }
+    }
+
+    int min_move = INT32_MAX;
+    for (int i = 0; i < 4; i++)
+        if (min_move > min_moves[i]) min_move = min_moves[i];
+
+    return min_move;
+}
+
+bool can_exit(map *stat, int r, int c, char dir) {
+    switch (dir) {
+        case L:
+            for (int nc = c - 1; nc >= 1; nc--) {
+                if (stat->board[r][nc] == EXIT) return true;
+                if (stat->board[r][nc] == WALL) break;
+            }
+            break;
+        case R:
+            for (int nc = c + 1; nc < M - 1; nc++) {
+                if (stat->board[r][nc] == EXIT) return true;
+                if (stat->board[r][nc] == WALL) break;
+            }
+            break;
+        case U:
+            for (int nr = r - 1; nr >= 1; nr--) {
+                if (stat->board[nr][c] == EXIT) return true;
+                if (stat->board[nr][c] == WALL) break;
+            }
+            break;
+        case D:
+            for (int nr = r + 1; nr < N - 1; nr++) {
+                if (stat->board[nr][c] == EXIT) return true;
+                if (stat->board[nr][c] == WALL) break;
+            }
+            break;
+        default:
+            break;
+    }
+    return false;
+}
+
+int go_until_wall(map *stat, int r, int c, char dir) {
+    switch (dir) {
+        case L:
+            for (int nc = c - 1; nc >= 0; nc--)
+                if (stat->board[r][nc] == WALL || stat->board[r][nc] == BLUB ||
+                    stat->board[r][nc] == REDB)
+                    return (nc + 1);
+            break;
+        case R:
+            for (int nc = c + 1; nc < M; nc++)
+                if (stat->board[r][nc] == WALL || stat->board[r][nc] == BLUB ||
+                    stat->board[r][nc] == REDB)
+                    return (nc - 1);
+            break;
+        case U:
+            for (int nr = r - 1; nr >= 0; nr--)
+                if (stat->board[nr][c] == WALL || stat->board[nr][c] == BLUB ||
+                    stat->board[nr][c] == REDB)
+                    return (nr + 1);
+            break;
+        case D:
+            for (int nr = r + 1; nr < N; nr++)
+                if (stat->board[nr][c] == WALL || stat->board[nr][c] == BLUB ||
+                    stat->board[nr][c] == REDB)
+                    return (nr - 1);
+            break;
+
+        default:
+            break;
+    }
+    return -1;
+}
+
+void exit_red(map *stat) {
+    stat->r_exit = 1;
+    stat->board[stat->r_coord[0]][stat->r_coord[1]] = VOID;
+    stat->r_coord[0] = -1;
+    stat->r_coord[1] = -1;
+}
+
+void exit_blu(map *stat) {
+    stat->b_exit = 1;
+    stat->board[stat->b_coord[0]][stat->b_coord[1]] = VOID;
+    stat->b_coord[0] = -1;
+    stat->b_coord[1] = -1;
+}
+
+void move_red(map *stat, int nr, int nc) {
+    stat->board[stat->r_coord[0]][stat->r_coord[1]] = VOID;
+    stat->board[nr][nc] = REDB;
+    stat->r_coord[0] = nr;
+    stat->r_coord[1] = nc;
+}
+
+void move_blu(map *stat, int nr, int nc) {
+    stat->board[stat->b_coord[0]][stat->b_coord[1]] = VOID;
+    stat->board[nr][nc] = BLUB;
+    stat->b_coord[0] = nr;
+    stat->b_coord[1] = nc;
+}
+
+void move_red_l(map *stat) {
+    if (can_exit(stat, stat->r_coord[0], stat->r_coord[1], L)) {
+        exit_red(stat);
+    } else {
+        int r_nc = go_until_wall(stat, stat->r_coord[0], stat->r_coord[1], L);
+        move_red(stat, stat->r_coord[0], r_nc);
+    }
+}
+
+void move_blu_l(map *stat) {
+    if (can_exit(stat, stat->b_coord[0], stat->b_coord[1], L)) {
+        exit_blu(stat);
+    } else {
+        int b_nc = go_until_wall(stat, stat->b_coord[0], stat->b_coord[1], L);
+        move_blu(stat, stat->b_coord[0], b_nc);
+    }
+}
+
+map move_l(map stat) {
+    if (stat.r_coord[1] < stat.b_coord[1]) {  // R이 더 왼쪽
+        move_red_l(&stat);
+        move_blu_l(&stat);
+    } else {  // B가 더 왼쪽
+        move_blu_l(&stat);
+        move_red_l(&stat);
+    }
+    return stat;
+}
+
+void move_red_r(map *stat) {
+    if (can_exit(stat, stat->r_coord[0], stat->r_coord[1], R)) {
+        exit_red(stat);
+    } else {
+        int r_nc = go_until_wall(stat, stat->r_coord[0], stat->r_coord[1], R);
+        move_red(stat, stat->r_coord[0], r_nc);
+    }
+}
+
+void move_blu_r(map *stat) {
+    if (can_exit(stat, stat->b_coord[0], stat->b_coord[1], R)) {
+        exit_blu(stat);
+    } else {
+        int b_nc = go_until_wall(stat, stat->b_coord[0], stat->b_coord[1], R);
+        move_blu(stat, stat->b_coord[0], b_nc);
+    }
+}
+
+map move_r(map stat) {
+    if (stat.r_coord[1] > stat.b_coord[1]) {  // R이 더 오른쪽
+        move_red_r(&stat);
+        move_blu_r(&stat);
+    } else {  // B가 더 오른쪽
+        move_blu_r(&stat);
+        move_red_r(&stat);
+    }
+    return stat;
+}
+
+void move_red_u(map *stat) {
+    if (can_exit(stat, stat->r_coord[0], stat->r_coord[1], U)) {
+        exit_red(stat);
+    } else {
+        int r_nr = go_until_wall(stat, stat->r_coord[0], stat->r_coord[1], U);
+        move_red(stat, r_nr, stat->r_coord[1]);
+    }
+}
+
+void move_blu_u(map *stat) {
+    if (can_exit(stat, stat->b_coord[0], stat->b_coord[1], U)) {
+        exit_blu(stat);
+    } else {
+        int b_nr = go_until_wall(stat, stat->b_coord[0], stat->b_coord[1], U);
+        move_blu(stat, b_nr, stat->b_coord[1]);
+    }
+}
+
+map move_u(map stat) {
+    if (stat.r_coord[0] < stat.b_coord[0]) {  // R이 더 위
+        move_red_u(&stat);
+        move_blu_u(&stat);
+    } else {  // B가 더 위
+        move_blu_u(&stat);
+        move_red_u(&stat);
+    }
+    return stat;
+}
+
+void move_red_d(map *stat) {
+    if (can_exit(stat, stat->r_coord[0], stat->r_coord[1], D)) {
+        exit_red(stat);
+    } else {
+        int r_nr = go_until_wall(stat, stat->r_coord[0], stat->r_coord[1], D);
+        move_red(stat, r_nr, stat->r_coord[1]);
+    }
+}
+
+void move_blu_d(map *stat) {
+    if (can_exit(stat, stat->b_coord[0], stat->b_coord[1], D)) {
+        exit_blu(stat);
+    } else {
+        int b_nr = go_until_wall(stat, stat->b_coord[0], stat->b_coord[1], D);
+        move_blu(stat, b_nr, stat->b_coord[1]);
+    }
+}
+
+map move_d(map stat) {
+    if (stat.r_coord[0] > stat.b_coord[0]) {  // R이 더 아래
+        move_red_d(&stat);
+        move_blu_d(&stat);
+    } else {  // B가 더 아래
+        move_blu_d(&stat);
+        move_red_d(&stat);
+    }
+    return stat;
+}
