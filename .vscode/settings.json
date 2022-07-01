@@ -33,6 +33,23 @@
         "ostream": "c",
         "sstream": "c",
         "utility": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "*.done": "c",
+        "atomic": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "unordered_map": "cpp",
+        "iterator": "cpp",
+        "memory": "cpp",
+        "system_error": "cpp",
+        "initializer_list": "cpp"
     }
 }
