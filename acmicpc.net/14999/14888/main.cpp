@@ -1,0 +1,63 @@
+#include <cstdio>
+
+#define MAX_N 11
+
+enum e_op
+{
+	PLUS = 0,
+	MINUS,
+	MULT,
+	DIV
+};
+
+int n;
+int numbers[MAX_N];
+int ops[4]; // + - * /
+int min = 1000000001;
+int max = -1000000001;
+
+void tryOp(int numIdx, int prevRes)
+{
+	if (numIdx == n)
+	{
+		if (prevRes < min)
+			min = prevRes;
+		if (prevRes > max)
+			max = prevRes;
+		return;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		if (ops[i] <= 0)
+			continue;
+		ops[i]--;
+		switch (i)
+		{
+		case PLUS:
+			tryOp(numIdx + 1, prevRes + numbers[numIdx]);
+			break;
+		case MINUS:
+			tryOp(numIdx + 1, prevRes - numbers[numIdx]);
+			break;
+		case MULT:
+			tryOp(numIdx + 1, prevRes * numbers[numIdx]);
+			break;
+		case DIV:
+			tryOp(numIdx + 1, prevRes / numbers[numIdx]);
+			break;
+		}
+		ops[i]++;
+	}
+}
+
+int main(void)
+{
+	scanf("%d", &n);
+	for (int i = 0; i < n;i++)
+		scanf("%d", &numbers[i]);
+	for (int i = 0; i < 4;i++)
+		scanf("%d", &ops[i]);
+	tryOp(1, numbers[0]);
+	printf("%d\n%d\n", max, min);
+	return (0);
+}
