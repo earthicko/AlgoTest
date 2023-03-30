@@ -1,0 +1,49 @@
+#include <cstdio>
+#include <vector>
+
+#define MAX_N 1000
+
+int n;
+int a[MAX_N];
+int lisLenUntil[MAX_N];
+int maxLisLen = 0;
+int lastIdxOfLis = 0;
+
+int main(void)
+{
+	scanf("%d", &n);
+	for (int i = 0; i < n; i++)
+		scanf("%d", &a[i]);
+
+	std::vector<int> lis;
+	for (int i = 0; i < n; i++)
+	{
+		int prevLisLen = 0;
+		for (int j = 0; j < i; j++)
+		{
+			if (a[j] < a[i] && prevLisLen < lisLenUntil[j])
+				prevLisLen = lisLenUntil[j];
+		}
+		lisLenUntil[i] = prevLisLen + 1;
+		if (lisLenUntil[i] > maxLisLen)
+		{
+			maxLisLen = lisLenUntil[i];
+			lastIdxOfLis = i;
+		}
+	}
+	lis.push_back(a[lastIdxOfLis]);
+	int compareIdx = lastIdxOfLis;
+	for (int i = lastIdxOfLis - 1; i >= 0; i--)
+	{
+		if (a[i] < a[compareIdx] && lisLenUntil[i] + 1 == lisLenUntil[compareIdx])
+		{
+			lis.push_back(a[i]);
+			compareIdx = i;
+		}
+	}
+	printf("%d\n", maxLisLen);
+	for (int i = lis.size() - 1; i >= 0; i--)
+		printf("%d ", lis[i]);
+	printf("\n");
+	return (0);
+}
