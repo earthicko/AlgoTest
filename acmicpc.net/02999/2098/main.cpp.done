@@ -1,0 +1,58 @@
+#include <cstdio>
+
+#define MAX_N 16
+#define MAX_W 1000000
+#define UNKNOWN -1
+#define UNREACHABLE 0
+
+const int inf = MAX_W * (MAX_N + 1) + 1;
+const int maxStates = (1 << MAX_N);
+const int startPos = 0;
+int n;
+int fullState;
+int cost[MAX_N][MAX_N];
+int remainingCost[MAX_N][maxStates];
+
+int getRemainingCostAt(int pos, int visitedState)
+{
+	if (visitedState == fullState) // visited all positions
+	{
+		if (cost[pos][startPos] == UNREACHABLE) // but no route from here to starting position
+			remainingCost[pos][visitedState] = inf;
+		else
+			remainingCost[pos][visitedState] = cost[pos][startPos];
+		return (remainingCost[pos][visitedState]);
+	}
+
+	if (remainingCost[pos][visitedState] != UNKNOWN)
+		return (remainingCost[pos][visitedState]);
+
+	remainingCost[pos][visitedState] = inf;
+	for (int nextPos = 0; nextPos < n; nextPos++)
+	{
+		if (cost[pos][nextPos] == UNREACHABLE) // No route
+			continue;
+		if (visitedState & (1 << nextPos)) // Already visited
+			continue;
+		int candidiateCost = cost[pos][nextPos] + getRemainingCostAt(nextPos, visitedState | (1 << nextPos));
+		if (candidiateCost < remainingCost[pos][visitedState])
+			remainingCost[pos][visitedState] = candidiateCost;
+	}
+	return (remainingCost[pos][visitedState]);
+}
+
+int main(void)
+{
+	for (int i = 0; i < MAX_N; i++)
+		for (int j = 0; j < maxStates; j++)
+			remainingCost[i][j] = UNKNOWN;
+
+	scanf("%d", &n);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+			scanf("%d", &cost[i][j]);
+	fullState = (1 << n) - 1;
+
+	printf("%d\n", getRemainingCostAt(startPos, 1 << startPos));
+	return (0);
+}
