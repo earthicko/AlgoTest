@@ -1,0 +1,57 @@
+#include <cstdio>
+#include <limits.h>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+#define MAX_N 15
+
+int n;
+int t[MAX_N];
+int p[MAX_N];
+int maxProfit;
+
+void getMaxProfitFrom(int day, int prevProfit)
+{
+	if (day >= n)
+	{
+		DEBUG_PRINTF("At day %d simulation stops: profit %d\n", day, prevProfit);
+		if (prevProfit > maxProfit)
+		{
+			DEBUG_PRINTF("Found new max profit %d\n", prevProfit);
+			maxProfit = prevProfit;
+		}
+		return;
+	}
+	DEBUG_PRINTF("At day %d, can earn profit %d using %d days\n", day, p[day], t[day]);
+	if (day + t[day] > n)
+	{
+		DEBUG_PRINTF("Cannot earn because not enough time (%d + %d > %d)\n", day, t[day], n);
+	}
+	else
+	{
+		int newProfit = prevProfit + p[day];
+		int newDay = day + t[day];
+		DEBUG_PRINTF("Try earn %d, resulting in profit %d and day %d\n", p[day], newProfit, newDay);
+		getMaxProfitFrom(newDay, newProfit);
+	}
+	DEBUG_PRINTF("Skip to next day, day is %d\n", day + 1);
+	getMaxProfitFrom(day + 1, prevProfit);
+}
+
+int main(void)
+{
+	scanf("%d", &n);
+	for (int i = 0; i < n; i++)
+	{
+		scanf("%d%d", &t[i], &p[i]);
+	}
+	getMaxProfitFrom(0, 0);
+	printf("%d\n", maxProfit);
+	return (0);
+}
