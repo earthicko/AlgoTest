@@ -1,0 +1,127 @@
+#include <cstdio>
+#include <iostream>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+#define TEETH_N 8
+#define CW 1
+#define CCW -1
+
+class Cog
+{
+public:
+	Cog(void) {}
+	int getLeftTeeth(void)
+	{
+		return (_state[(_head + 6) % TEETH_N]);
+	}
+	int getRightTeeth(void)
+	{
+		return (_state[(_head + 2) % TEETH_N]);
+	}
+	void rotate(int dir)
+	{
+		_head = (_head + TEETH_N - dir) % TEETH_N;
+	}
+	void setState(const std::string &line)
+	{
+		for (int i = 0; i < TEETH_N; i++)
+		{
+			if (line[i] == '0')
+				_state[i] = 0;
+			else if (line[i] == '1')
+				_state[i] = 1;
+		}
+		_head = 0;
+	}
+	int gethead(void)
+	{
+		return (_state[_head]);
+	}
+
+	void print(void)
+	{
+		for (int i = 0; i < TEETH_N; i++)
+			DEBUG_PRINTF("%d ", _state[(i + _head) % TEETH_N]);
+		DEBUG_PRINTF("\n");
+	}
+
+	int _state[TEETH_N];
+	int _head;
+};
+
+Cog cogs[4];
+int k;
+
+void determineRotationDir(int *shouldRotate, int idx)
+{
+	for (int i = idx + 1; i < 4; i++)
+	{
+		int leftState = cogs[i - 1].getRightTeeth();
+		int rightState = cogs[i].getLeftTeeth();
+		DEBUG_PRINTF("cog %d right %d, cog %d left %d\n", i - 1, leftState, i, rightState);
+		if (leftState != rightState)
+			shouldRotate[i] = -1 * shouldRotate[i - 1];
+		else
+			break;
+	}
+	for (int i = idx - 1; i >= 0; i--)
+	{
+		int leftState = cogs[i].getRightTeeth();
+		int rightState = cogs[i + 1].getLeftTeeth();
+		DEBUG_PRINTF("cog %d right %d, cog %d left %d\n", i, leftState, i + 1, rightState);
+		if (leftState != rightState)
+			shouldRotate[i] = -1 * shouldRotate[i + 1];
+		else
+			break;
+	}
+}
+
+void rotateAll(int *shouldRotate)
+{
+	for (int i = 0; i < 4; i++)
+		cogs[i].rotate(shouldRotate[i]);
+}
+
+int main(void)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		std::string line;
+		std::cin >> line;
+		cogs[i].setState(line);
+	}
+	std::cin >> k;
+
+	for (int i = 0; i < 4; i++)
+		cogs[i].print();
+	for (int i = 0; i < k; i++)
+	{
+		int rotateIdx, dir;
+		std::cin >> rotateIdx >> dir;
+		rotateIdx--;
+		DEBUG_PRINTF("idx %d, dir %d\n", rotateIdx, dir);
+
+		int shouldRotate[4] = {0, 0, 0, 0};
+		shouldRotate[rotateIdx] = dir;
+		determineRotationDir(shouldRotate, rotateIdx);
+		rotateAll(shouldRotate);
+		for (int j = 0; j < 4; j++)
+			cogs[j].print();
+	}
+
+	int score = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (cogs[i].gethead() == 1)
+			score += (1 << i);
+	}
+	std::cout << score << "\n";
+	return (0);
+}
