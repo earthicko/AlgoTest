@@ -1,0 +1,31 @@
+// next_permutation은 오름차순 기 정렬시에만 사용 가능
+// comparator를 제공시 내림차순도 가능
+// 중복 제외한 순열 생성
+
+#include <algorithm>
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main(void)
+{
+    std::string s = "12345";
+    int len = s.size();
+
+    for (int i = 1; i <= len; i++) {
+        std::vector<bool> v(len - i, false);
+        v.insert(v.end(), i, true);
+        std::cout << "=============== " << i << "개 ===============\n";
+        do {
+            std::string temp = "";
+            for (int k = 0; k < len; k++) {
+                if (v[k])
+                    temp += s[k];
+            }
+            std::cout << temp << "\n";
+        } while (std::next_permutation(v.begin(), v.end()));
+        std::cout << "===================================\n";
+    }
+
+    return (0);
+}
