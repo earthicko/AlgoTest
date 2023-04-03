@@ -1,0 +1,192 @@
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
+#include <climits>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+const int maxn = 10;
+const int maxh = 30;
+// const int maxm = (maxn - 1) * maxh;
+
+int n, m, h;
+int minPick = 4;
+// [origin line][origin height] = true (has line to right)
+bool horizontalLine[maxn][maxh];
+
+void printState(void)
+{
+	DEBUG_PRINTF("   ");
+	for (int j = 0; j < n; j++)
+		DEBUG_PRINTF("%d  ", j);
+	DEBUG_PRINTF("\n");
+	for (int i = 0; i < h; i++)
+	{
+		DEBUG_PRINTF("%d  ", i);
+		for (int j = 0; j < n; j++)
+		{
+			DEBUG_PRINTF("|");
+			if (j < n - 1 && horizontalLine[j][i])
+				DEBUG_PRINTF("__");
+			else
+				DEBUG_PRINTF("  ");
+		}
+		DEBUG_PRINTF("\n");
+	}
+	DEBUG_PRINTF("   ");
+	for (int j = 0; j < n; j++)
+		DEBUG_PRINTF("|  ");
+	DEBUG_PRINTF("\n");
+}
+
+int getDest(int _n, int _h)
+{
+	int fromRight = -1;
+	int fromLeft = -1;
+
+	if (_n > 0)
+	{
+		if (horizontalLine[_n - 1][_h])
+			fromLeft = _n - 1;
+	}
+	if (_n < n - 1)
+	{
+		if (horizontalLine[_n][_h])
+			fromRight = _n + 1;
+	}
+	if (fromLeft == -1 && fromRight == -1)
+		return (_n);
+	else if (fromLeft != -1 && fromRight == -1)
+		return (fromLeft);
+	else if (fromLeft == -1 && fromRight != -1)
+		return (fromRight);
+	else
+		assert(false);
+}
+
+int getDest(int from)
+{
+	for (int i = 0; i < h; i++)
+	{
+		// DEBUG_PRINTF("At line %d height %d ", from, i);
+		from = getDest(from, i);
+	}
+	// DEBUG_PRINTF("return %d\n", from);
+	return (from);
+}
+
+bool checkIfMade(void)
+{
+	for (int i = 0; i < n; i++)
+	{
+		int dest = getDest(i);
+		DEBUG_PRINTF("From %d to %d\n", i, dest);
+		if (dest != i)
+			return (false);
+	}
+	return (true);
+}
+
+void increment(int *_n, int *_h)
+{
+	DEBUG_PRINTF("Increment\n");
+	(*_h)++;
+	if ((*_h) == h)
+	{
+		(*_h) = 0;
+		(*_n)++;
+	}
+}
+
+void decrement(int *_n, int *_h)
+{
+	DEBUG_PRINTF("Decrement\n");
+	(*_h)--;
+	if ((*_h) == -1)
+	{
+		(*_h) = h - 1;
+		(*_n)--;
+	}
+}
+
+bool isPickable(int _n, int _h)
+{
+	if (0 < _n)
+	{
+		if (horizontalLine[_n - 1][_h])
+			return (false);
+	}
+	if (horizontalLine[_n][_h])
+		return (false);
+	if (_n < n - 1)
+	{
+		if (horizontalLine[_n + 1][_h])
+			return (false);
+	}
+	return (true);
+}
+
+void pickLineUntil(int _n, int _h, int pickedSoFar)
+{
+	// if picked enough return
+	if (pickedSoFar > 3)
+		return;
+	DEBUG_PRINTF("Cursor at %d, %d (picked %d)\n", _n, _h, pickedSoFar);
+	printState();
+	// if made print and exit
+	if (checkIfMade())
+	{
+		if (pickedSoFar < minPick)
+			minPick = pickedSoFar;
+	}
+	if (_n == n - 1 || pickedSoFar == 3)
+		return;
+	// if cursor is pickable
+	if (isPickable(_n, _h))
+	{
+		DEBUG_PRINTF("%d, %d is pickable\n", _n, _h);
+		// try pick right line
+		horizontalLine[_n][_h] = true;
+		// increment cursor & call recursively
+		increment(&_n, &_h);
+		pickLineUntil(_n, _h, pickedSoFar + 1);
+		// unpick
+		decrement(&_n, &_h);
+		horizontalLine[_n][_h] = false;
+	}
+	else
+		DEBUG_PRINTF("%d, %d is not pickable\n", _n, _h);
+	// else
+	// increment cursor & call recursively
+	increment(&_n, &_h);
+	pickLineUntil(_n, _h, pickedSoFar);
+}
+
+int main(void)
+{
+	scanf("%d%d%d", &n, &m, &h);
+
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < h; j++)
+			horizontalLine[i][j] = false;
+
+	for (int i = 0; i < m; i++)
+	{
+		int a, b; // height, origin line (to (origin + 1)th line)
+		scanf("%d%d", &a, &b);
+		a--;
+		b--;
+		horizontalLine[b][a] = true;
+	}
+	pickLineUntil(0, 0, 0);
+	if (minPick == 4)
+		minPick = -1;
+	printf("%d\n", minPick);
+	return (0);
+}
