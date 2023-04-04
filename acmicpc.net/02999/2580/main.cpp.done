@@ -1,0 +1,85 @@
+#include <cstdio>
+#include <iostream>
+#include <vector>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+typedef struct coord_s {
+    int r;
+    int c;
+} coord_t;
+
+int nums[9][9];
+bool rowfilled[9][10];
+bool colfilled[9][10];
+bool sectorfilled[3][3][10];
+std::vector<coord_t> emptyCoords;
+
+void printNums(void)
+{
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            PRINTF("%d ", nums[r][c]);
+        }
+        PRINTF("\n");
+    }
+}
+
+bool solve(int idx)
+{
+    if (idx == emptyCoords.size()) {
+        return (true);
+    }
+    int r = emptyCoords[idx].r;
+    int c = emptyCoords[idx].c;
+    for (int i = 1; i <= 9; i++) {
+        if (rowfilled[r][i])
+            continue;
+        if (colfilled[c][i])
+            continue;
+        if (sectorfilled[r / 3][c / 3][i])
+            continue;
+        rowfilled[r][i] = true;
+        colfilled[c][i] = true;
+        sectorfilled[r / 3][c / 3][i] = true;
+        nums[r][c] = i;
+        printNums();
+        if (solve(idx + 1))
+            return (true);
+        rowfilled[r][i] = false;
+        colfilled[c][i] = false;
+        sectorfilled[r / 3][c / 3][i] = false;
+        nums[r][c] = 0;
+    }
+    return (false);
+}
+
+int main(void)
+{
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            std::cin >> nums[r][c];
+            if (nums[r][c] > 0) {
+                rowfilled[r][nums[r][c]] = true;
+                colfilled[c][nums[r][c]] = true;
+                sectorfilled[r / 3][c / 3][nums[r][c]] = true;
+            } else {
+                coord_t coord = { r, c };
+                emptyCoords.push_back(coord);
+            }
+        }
+    }
+    solve(0);
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++)
+            printf("%d ", nums[r][c]);
+        printf("\n");
+    }
+    return (0);
+}
