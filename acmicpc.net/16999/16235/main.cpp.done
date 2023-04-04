@@ -1,0 +1,122 @@
+#include <algorithm>
+#include <cstdio>
+#include <list>
+#include <vector>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(...)
+#endif
+
+const int maxn = 10;
+
+int n, m, k;
+int a[maxn][maxn];
+int res[maxn][maxn];
+int deadTreeIdx[maxn][maxn];
+std::vector<int> trees[maxn][maxn];
+
+void spring(void)
+{
+    DEBUG_PRINTF("spring\n");
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            deadTreeIdx[r][c] = -1;
+            int i = 0;
+            while (i < trees[r][c].size()) {
+                DEBUG_PRINTF("tree[%d] %d at (%d, %d)\n", i, trees[r][c][i], r, c);
+                if (res[r][c] < trees[r][c][i]) {
+                    deadTreeIdx[r][c] = i;
+                    break;
+                }
+                res[r][c] -= trees[r][c][i];
+                trees[r][c][i]++;
+                i++;
+            }
+        }
+    }
+}
+
+void summer(void)
+{
+    DEBUG_PRINTF("summer\n");
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            if (deadTreeIdx[r][c] != -1) {
+                for (int i = deadTreeIdx[r][c]; i < trees[r][c].size(); i++)
+                    res[r][c] += trees[r][c][i] / 2;
+                trees[r][c].erase(trees[r][c].begin() + deadTreeIdx[r][c], trees[r][c].end());
+            }
+        }
+    }
+}
+
+void fall(void)
+{
+    DEBUG_PRINTF("fall\n");
+    static const int dir[8][2] = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } };
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            for (int i = 0; i < trees[r][c].size(); i++) {
+                if (trees[r][c][i] % 5 != 0)
+                    continue;
+                for (int j = 0; j < 8; j++) {
+                    int newr = r + dir[j][0];
+                    int newc = c + dir[j][1];
+                    if (newr < 0 || newr >= n || newc < 0 || newc >= n)
+                        continue;
+                    std::vector<int>::iterator bound = std::lower_bound(trees[newr][newc].begin(), trees[newr][newc].end(), 1);
+                    trees[newr][newc].insert(bound, 1);
+                }
+            }
+        }
+    }
+}
+
+void winter(void)
+{
+    DEBUG_PRINTF("winter\n");
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            res[r][c] += a[r][c];
+        }
+    }
+}
+
+void simulate(void)
+{
+    spring();
+    summer();
+    fall();
+    winter();
+}
+
+int main(void)
+{
+    scanf("%d%d%d", &n, &m, &k);
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            scanf("%d", &a[r][c]);
+            res[r][c] = 5;
+        }
+    }
+    for (int i = 0; i < m; i++) {
+        int x, y, z;
+        scanf("%d%d%d", &x, &y, &z);
+        x--;
+        y--;
+        std::vector<int>::iterator iter = std::lower_bound(trees[x][y].begin(), trees[x][y].end(), z);
+        trees[x][y].insert(iter, z);
+    }
+    for (int i = 0; i < k; i++)
+        simulate();
+    int counter = 0;
+    for (int r = 0; r < n; r++)
+        for (int c = 0; c < n; c++)
+            counter += trees[r][c].size();
+    printf("%d\n", counter);
+    return (0);
+}
