@@ -1,0 +1,112 @@
+#include <cstdio>
+#include <cstring>
+#include <queue>
+
+typedef struct coord_s {
+    int r;
+    int c;
+} coord_t;
+
+const int maxn = 100;
+int cheese[maxn][maxn];
+int height, width;
+
+enum e_mark {
+    EMPTY = 0,
+    VISITED = 1
+};
+
+coord_t operator+(const coord_t& a, const coord_t& b)
+{
+    coord_t ret = { a.r + b.r, a.c + b.c };
+    return (ret);
+}
+
+int getContent(int map[maxn][maxn], const coord_t& coord)
+{
+    return (map[coord.r][coord.c]);
+}
+
+void setContent(int map[maxn][maxn], const coord_t& coord, int content)
+{
+    map[coord.r][coord.c] = content;
+}
+
+bool oob(const coord_t& coord)
+{
+    return (coord.r < 0 || coord.r >= height || coord.c < 0 || coord.c >= width);
+}
+
+int countCheese(void)
+{
+    int counter = 0;
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            if (cheese[r][c])
+                counter++;
+        }
+    }
+    return (counter);
+}
+
+int melt(void)
+{
+    static const coord_t dir[4] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+    int targetMark[maxn][maxn];
+    bzero(targetMark, sizeof(targetMark));
+    coord_t start = { 0, 0 };
+    std::queue<coord_t> nextCoords;
+    std::queue<coord_t> meltCoords;
+    nextCoords.push(start);
+    while (!nextCoords.empty()) {
+        coord_t curr = nextCoords.front();
+        nextCoords.pop();
+        for (int i = 0; i < 4; i++) {
+            coord_t next = curr + dir[i];
+            if (oob(next))
+                continue;
+            if (getContent(targetMark, next) != EMPTY)
+                continue;
+            if (getContent(cheese, next) == 1) {
+                setContent(targetMark, next, VISITED);
+                meltCoords.push(next);
+                continue;
+            } else {
+                setContent(targetMark, next, VISITED);
+                nextCoords.push(next);
+            }
+        }
+    }
+    int meltedCount = meltCoords.size();
+    while (!meltCoords.empty()) {
+        setContent(cheese, meltCoords.front(), 0);
+        meltCoords.pop();
+    }
+    return (meltedCount);
+}
+
+int main(void)
+{
+    scanf("%d%d", &height, &width);
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            scanf("%d", &cheese[r][c]);
+        }
+    }
+    int lastNCheese = countCheese();
+    if (lastNCheese == 0) {
+        printf("0\n0\n");
+        return (0);
+    }
+    int hours = 0;
+    while (true) {
+        hours++;
+        int nCheese = lastNCheese - melt();
+        if (nCheese == 0)
+            break;
+        else
+            lastNCheese = nCheese;
+    }
+    printf("%d\n%d\n", hours, lastNCheese);
+    return (0);
+}

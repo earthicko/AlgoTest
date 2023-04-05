@@ -1,0 +1,68 @@
+#include <cstdio>
+#include <vector>
+
+// #define _DEBUG
+#ifdef _DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+typedef long long ll_t;
+int isNotPrime[2000001];
+std::vector<ll_t> primes;
+
+void buildPrime(void)
+{
+    primes.push_back(2);
+    ll_t primeCursor = 3;
+    while (true) {
+        while (isNotPrime[primeCursor])
+            primeCursor += 2;
+        if (primeCursor >= 2000001)
+            break;
+        primes.push_back(primeCursor);
+        PRINTF("%lld is prime\n", primeCursor);
+        for (ll_t notPrime = primeCursor * 2; notPrime < 2000001; notPrime += primeCursor)
+            isNotPrime[notPrime] = 1;
+        primeCursor += 2;
+    }
+}
+
+bool isprime(const ll_t& num)
+{
+    for (std::vector<ll_t>::iterator it = primes.begin(); it != primes.end(); it++) {
+        if (*it > num / 2)
+            break;
+        if (num % *it == 0)
+            return (false);
+    }
+    return (true);
+}
+
+bool solve(const ll_t& num)
+{
+    if (num <= 3)
+        return (false);
+    if (num % 2 == 0)
+        return (true);
+    if (isprime(num - 2))
+        return (true);
+    return (false);
+}
+
+int main(void)
+{
+    buildPrime();
+    int t;
+    scanf("%d", &t);
+    for (int i = 0; i < t; i++) {
+        ll_t a, b;
+        scanf("%lld%lld", &a, &b);
+        if (solve(a + b))
+            printf("YES\n");
+        else
+            printf("NO\n");
+    }
+    return (0);
+}
