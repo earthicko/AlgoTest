@@ -14,7 +14,7 @@ int n;
 int numbers[MAX_N];
 int ops[4]; // + - * /
 int min = 1000000001;
-int max = -1000000001;
+int sumMax = -1000000001;
 
 void tryOp(int numIdx, int prevRes)
 {
@@ -22,8 +22,8 @@ void tryOp(int numIdx, int prevRes)
 	{
 		if (prevRes < min)
 			min = prevRes;
-		if (prevRes > max)
-			max = prevRes;
+		if (prevRes > sumMax)
+			sumMax = prevRes;
 		return;
 	}
 	for (int i = 0; i < 4; i++)
@@ -58,6 +58,6 @@ int main(void)
 	for (int i = 0; i < 4;i++)
 		scanf("%d", &ops[i]);
 	tryOp(1, numbers[0]);
-	printf("%d\n%d\n", max, min);
+	printf("%d\n%d\n", sumMax, min);
 	return (0);
 }
