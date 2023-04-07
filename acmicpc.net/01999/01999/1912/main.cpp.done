@@ -1,0 +1,22 @@
+#include <limits>
+#include <iostream>
+
+const int maxn = 100001;
+int partialSum[maxn];
+int n;
+int sumMax;
+
+int main(void)
+{
+	std::cin >> n;
+	sumMax = std::numeric_limits<int>::min();
+	for (int i = 1; i <= n; i++)
+	{
+		int num;
+		std::cin >> num;
+		partialSum[i] = std::max(num, num + partialSum[i - 1]);
+		sumMax = std::max(sumMax, partialSum[i]);
+	}
+	std::cout << sumMax << "\n";
+	return (0);
+}
