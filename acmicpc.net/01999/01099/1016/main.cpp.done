@@ -1,0 +1,52 @@
+#include <cstdio>
+#include <iostream>
+#include <vector>
+
+// #define _DEBUG
+#ifdef _DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+typedef long long ll_t;
+int isSquareMult[1000001];
+
+void buildMap(const ll_t& min, const ll_t& max)
+{
+    ll_t num = 2;
+    while (true) {
+        ll_t sq = num * num;
+        PRINTF("Test %lld\n", sq);
+        if (sq > max)
+            break;
+        ll_t cursor = (min / sq) * sq;
+        while (cursor < min)
+            cursor += sq;
+        while (cursor <= max) {
+            isSquareMult[cursor - min] = 1;
+            PRINTF("[%lld] = 1\n", cursor - min);
+            cursor += sq;
+        }
+        num++;
+    }
+}
+
+int count(const ll_t& min, const ll_t& max)
+{
+    int counter = 0;
+    for (ll_t cursor = 0; cursor <= max - min; cursor++) {
+        if (isSquareMult[cursor] == 0)
+            counter++;
+    }
+    return (counter);
+}
+
+int main(void)
+{
+    ll_t min, max;
+    std::cin >> min >> max;
+    buildMap(min, max);
+    std::cout << count(min, max) << "\n";
+    return (0);
+}

@@ -1,0 +1,160 @@
+#include <iostream>
+
+void rotateFacesCW(char* a, char* b, char* c, char* d)
+{
+    char backup = *a;
+    *a = *d;
+    *d = *c;
+    *c = *b;
+    *b = backup;
+}
+
+void rotateFacesCCW(char* a, char* b, char* c, char* d)
+{
+    char backup = *a;
+    *a = *b;
+    *b = *c;
+    *c = *d;
+    *d = backup;
+}
+
+class Cube {
+private:
+    enum e_face {
+        UP = 0,
+        DOWN,
+        FRONT,
+        BACK,
+        LEFT,
+        RIGHT,
+    };
+    enum e_color {
+        WHITE = 'w',
+        YELLOW = 'y',
+        RED = 'r',
+        ORANGE = 'o',
+        GREEN = 'g',
+        BLUE = 'b',
+    };
+    char faces[6][3][3];
+
+public:
+    Cube(void)
+    {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                faces[UP][i][j] = WHITE;
+                faces[DOWN][i][j] = YELLOW;
+                faces[FRONT][i][j] = RED;
+                faces[BACK][i][j] = ORANGE;
+                faces[LEFT][i][j] = GREEN;
+                faces[RIGHT][i][j] = BLUE;
+            }
+        }
+    }
+    void print(void)
+    {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                std::cout << faces[UP][i][j];
+            }
+            std::cout << "\n";
+        }
+    }
+    void rotateUp(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[BACK][0][0], &faces[RIGHT][0][0], &faces[FRONT][0][0], &faces[LEFT][0][0]);
+        rotator(&faces[BACK][0][1], &faces[RIGHT][0][1], &faces[FRONT][0][1], &faces[LEFT][0][1]);
+        rotator(&faces[BACK][0][2], &faces[RIGHT][0][2], &faces[FRONT][0][2], &faces[LEFT][0][2]);
+        rotator(&faces[UP][0][0], &faces[UP][0][2], &faces[UP][2][2], &faces[UP][2][0]);
+        rotator(&faces[UP][1][0], &faces[UP][0][1], &faces[UP][1][2], &faces[UP][2][1]);
+    }
+    void rotateDown(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[BACK][2][0], &faces[LEFT][2][0], &faces[FRONT][2][0], &faces[RIGHT][2][0]);
+        rotator(&faces[BACK][2][1], &faces[LEFT][2][1], &faces[FRONT][2][1], &faces[RIGHT][2][1]);
+        rotator(&faces[BACK][2][2], &faces[LEFT][2][2], &faces[FRONT][2][2], &faces[RIGHT][2][2]);
+        rotator(&faces[DOWN][0][2], &faces[DOWN][0][0], &faces[DOWN][2][0], &faces[DOWN][2][2]);
+        rotator(&faces[DOWN][0][1], &faces[DOWN][1][0], &faces[DOWN][2][1], &faces[DOWN][1][2]);
+    }
+    void rotateLeft(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[UP][0][0], &faces[FRONT][0][0], &faces[DOWN][2][0], &faces[BACK][2][2]);
+        rotator(&faces[UP][1][0], &faces[FRONT][1][0], &faces[DOWN][1][0], &faces[BACK][1][2]);
+        rotator(&faces[UP][2][0], &faces[FRONT][2][0], &faces[DOWN][0][0], &faces[BACK][0][2]);
+        rotator(&faces[LEFT][0][0], &faces[LEFT][0][2], &faces[LEFT][2][2], &faces[LEFT][2][0]);
+        rotator(&faces[LEFT][0][1], &faces[LEFT][1][2], &faces[LEFT][2][1], &faces[LEFT][1][0]);
+    }
+    void rotateRight(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[DOWN][0][2], &faces[FRONT][2][2], &faces[UP][2][2], &faces[BACK][0][0]);
+        rotator(&faces[DOWN][1][2], &faces[FRONT][1][2], &faces[UP][1][2], &faces[BACK][1][0]);
+        rotator(&faces[DOWN][2][2], &faces[FRONT][0][2], &faces[UP][0][2], &faces[BACK][2][0]);
+        rotator(&faces[RIGHT][2][2], &faces[RIGHT][2][0], &faces[RIGHT][0][0], &faces[RIGHT][0][2]);
+        rotator(&faces[RIGHT][2][1], &faces[RIGHT][1][0], &faces[RIGHT][0][1], &faces[RIGHT][1][2]);
+    }
+    void rotateFront(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[UP][2][0], &faces[RIGHT][0][0], &faces[DOWN][2][2], &faces[LEFT][2][2]);
+        rotator(&faces[UP][2][1], &faces[RIGHT][1][0], &faces[DOWN][2][1], &faces[LEFT][1][2]);
+        rotator(&faces[UP][2][2], &faces[RIGHT][2][0], &faces[DOWN][2][0], &faces[LEFT][0][2]);
+        rotator(&faces[FRONT][0][0], &faces[FRONT][0][2], &faces[FRONT][2][2], &faces[FRONT][2][0]);
+        rotator(&faces[FRONT][0][1], &faces[FRONT][1][2], &faces[FRONT][2][1], &faces[FRONT][1][0]);
+    }
+    void rotateBack(void (*rotator)(char*, char*, char*, char*))
+    {
+        rotator(&faces[UP][0][2], &faces[LEFT][0][0], &faces[DOWN][0][0], &faces[RIGHT][2][2]);
+        rotator(&faces[UP][0][1], &faces[LEFT][1][0], &faces[DOWN][0][1], &faces[RIGHT][1][2]);
+        rotator(&faces[UP][0][0], &faces[LEFT][2][0], &faces[DOWN][0][2], &faces[RIGHT][0][2]);
+        rotator(&faces[BACK][0][0], &faces[BACK][0][2], &faces[BACK][2][2], &faces[BACK][2][0]);
+        rotator(&faces[BACK][0][1], &faces[BACK][1][2], &faces[BACK][2][1], &faces[BACK][1][0]);
+    }
+};
+
+int main(void)
+{
+    int n;
+    std::cin >> n;
+    for (int i = 0; i < n; i++) {
+        Cube cube;
+        int nCommand;
+        std::cin >> nCommand;
+        for (int j = 0; j < nCommand; j++) {
+            std::string command;
+            std::cin >> command;
+            void (*rotator)(char*, char*, char*, char*);
+            switch (command[1]) {
+            case '+':
+                rotator = rotateFacesCW;
+                break;
+            case '-':
+                rotator = rotateFacesCCW;
+                break;
+            default:
+                break;
+            }
+            switch (command[0]) {
+            case 'U':
+                cube.rotateUp(rotator);
+                break;
+            case 'D':
+                cube.rotateDown(rotator);
+                break;
+            case 'L':
+                cube.rotateLeft(rotator);
+                break;
+            case 'R':
+                cube.rotateRight(rotator);
+                break;
+            case 'F':
+                cube.rotateFront(rotator);
+                break;
+            case 'B':
+                cube.rotateBack(rotator);
+                break;
+            }
+        }
+        cube.print();
+    }
+    return (0);
+}

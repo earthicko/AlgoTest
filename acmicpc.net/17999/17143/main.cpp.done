@@ -1,0 +1,117 @@
+#include <cstring>
+#include <iostream>
+
+typedef struct shark_s {
+    int dir[2];
+    int v;
+    int size;
+} shark_t;
+
+const int maxr = 100;
+int height, width, m;
+shark_t state[2][maxr][maxr];
+
+bool hasShark(int stateIdx, int r, int c)
+{
+    return (state[stateIdx][r][c].size > 0);
+}
+
+void killShark(int stateIdx, int r, int c)
+{
+    memset(&state[stateIdx][r][c], 0, sizeof(shark_t));
+}
+
+void moveShark(int* newr, int* newc, shark_t* shark)
+{
+    for (int i = 0; i < shark->v; i++) {
+        *newr += shark->dir[0];
+        *newc += shark->dir[1];
+        if (*newr < 0) {
+            shark->dir[0] *= -1;
+            *newr = 1;
+        } else if (*newr >= height) {
+            shark->dir[0] *= -1;
+            *newr = height - 2;
+        } else if (*newc < 0) {
+            shark->dir[1] *= -1;
+            *newc = 1;
+        } else if (*newc >= width) {
+            shark->dir[1] *= -1;
+            *newc = width - 2;
+        }
+    }
+}
+
+int pickShark(int manPos)
+{
+    int from = manPos % 2;
+    for (int r = 0; r < height; r++) {
+        if (hasShark(from, r, manPos)) {
+            int size = state[from][r][manPos].size;
+            killShark(from, r, manPos);
+            return (size);
+        }
+    }
+    return (0);
+}
+
+void moveShark(int oldstate, int newstate)
+{
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            if (!hasShark(oldstate, r, c))
+                continue;
+            int newr = r;
+            int newc = c;
+            moveShark(&newr, &newc, &state[oldstate][r][c]);
+            if (!(hasShark(newstate, newr, newc) && state[newstate][newr][newc].size > state[oldstate][r][c].size))
+                memcpy(&state[newstate][newr][newc], &state[oldstate][r][c], sizeof(shark_t));
+            killShark(oldstate, r, c);
+        }
+    }
+}
+
+int simulate(void)
+{
+    int sizeSum = 0;
+    for (int manPos = 0; manPos < width; manPos++) {
+        int from = manPos % 2;
+        int to = (manPos + 1) % 2;
+        sizeSum += pickShark(manPos);
+        moveShark(from, to);
+    }
+    return (sizeSum);
+}
+
+int main(void)
+{
+    std::cin >> height >> width >> m;
+    for (int i = 0; i < m; i++) {
+        int r, c, s, d, z;
+        std::cin >> r >> c >> s >> d >> z;
+        r--;
+        c--;
+        switch (d) {
+        case 1:
+            state[0][r][c].dir[0] = -1;
+            state[0][r][c].dir[1] = 0;
+            break;
+        case 2:
+            state[0][r][c].dir[0] = 1;
+            state[0][r][c].dir[1] = 0;
+            break;
+        case 3:
+            state[0][r][c].dir[0] = 0;
+            state[0][r][c].dir[1] = 1;
+            break;
+        case 4:
+            state[0][r][c].dir[0] = 0;
+            state[0][r][c].dir[1] = -1;
+            break;
+        }
+        state[0][r][c].v = s;
+        state[0][r][c].size = z;
+    }
+    printf("%d\n", simulate());
+    return (0);
+}
