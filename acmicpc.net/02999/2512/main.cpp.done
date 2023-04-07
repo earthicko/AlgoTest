@@ -1,0 +1,34 @@
+#include <algorithm>
+#include <iostream>
+
+const int maxn = 10000;
+int n;
+int request[maxn];
+int partialSum[maxn + 1];
+int sum;
+int total;
+
+int main(void)
+{
+    std::cin >> n;
+    for (int i = 0; i < n; i++)
+        std::cin >> request[i];
+    std::cin >> total;
+    std::sort(request, request + n);
+    for (int i = 0; i < n; i++)
+        partialSum[i + 1] = partialSum[i] + request[i];
+    for (int i = 0; i < n; i++) {
+        int capacity = request[i];
+        int newSum = capacity * (n - i) + partialSum[i];
+        if (newSum > total) {
+            while (newSum > total) {
+                capacity--;
+                newSum = capacity * (n - i) + partialSum[i];
+            }
+            std::cout << capacity << "\n";
+            return (0);
+        }
+    }
+    std::cout << request[n - 1] << "\n";
+    return (0);
+}

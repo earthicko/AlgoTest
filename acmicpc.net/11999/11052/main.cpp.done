@@ -1,0 +1,18 @@
+#include <iostream>
+
+const int maxn = 1000;
+int n;
+int price[maxn + 1];
+int maxSum[maxn + 1];
+
+int main(void)
+{
+    std::cin >> n;
+    for (int i = 1; i <= n; i++) {
+        std::cin >> price[i];
+        for (int sumi = i; sumi <= n; sumi++)
+            maxSum[sumi] = std::max(maxSum[sumi], maxSum[sumi - i] + price[i]);
+    }
+    std::cout << maxSum[n] << "\n";
+    return (0);
+}
