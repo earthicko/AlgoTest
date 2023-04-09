@@ -1,0 +1,54 @@
+#include <algorithm>
+#include <iostream>
+#include <limits>
+
+const int nmax = 200000;
+int x[nmax];
+int n, c;
+
+int idxToDist(int idx)
+{
+    return ((x[n - 1] - x[0]) - idx);
+}
+
+int possibleInstallations(int space)
+{
+    int counter = 1;
+    int prevX = x[0];
+    for (int i = 1; i < n; i++) {
+        if (x[i] - prevX >= space) {
+            counter++;
+            prevX = x[i];
+        }
+    }
+    return (counter);
+}
+
+int lowerBound(int start, int end, int target)
+{
+    int low = start;
+    int high = end;
+    int mid;
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        if (target <= possibleInstallations(idxToDist(mid)))
+            high = mid;
+        else
+            low = mid + 1;
+    }
+    while (low < end && possibleInstallations(idxToDist(low)) < target)
+        low++;
+    return (low);
+}
+
+int main(void)
+{
+    std::cin >> n >> c;
+    for (int i = 0; i < n; i++)
+        std::cin >> x[i];
+    std::sort(&x[0], &x[n]);
+    int lowerBoundIdx = lowerBound(0, x[n - 1] - x[0], c);
+    int lowerBoundDist = idxToDist(lowerBoundIdx);
+    std::cout << lowerBoundDist << "\n";
+    return (0);
+}
