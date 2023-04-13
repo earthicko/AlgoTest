@@ -1,0 +1,27 @@
+#include <iostream>
+#include <limits>
+
+typedef long long ll_t;
+
+const int nmax = 100000;
+int n;
+ll_t dist[nmax - 1];
+ll_t cost[nmax];
+
+int main(void)
+{
+	std::cin >> n;
+	for (int i = 0; i < n - 1; i++)
+		std::cin >> dist[i];
+	for (int i = 0; i < n; i++)
+		std::cin >> cost[i];
+	ll_t totalCost = 0;
+	ll_t prevMinCost = std::numeric_limits<ll_t>::max();
+	for (int i = 0; i < n - 1; i++)
+	{
+		prevMinCost = std::min(prevMinCost, cost[i]);
+		totalCost += prevMinCost * dist[i];
+	}
+	std::cout << totalCost << "\n";
+	return (0);
+}
