@@ -1,0 +1,45 @@
+#include <iostream>
+#include <queue>
+
+typedef struct coord_s {
+    int r;
+    int c;
+} Coord;
+
+int n, m, l, k;
+std::vector<Coord> stars;
+
+int countStarFrom(Coord& from)
+{
+    int counter = 0;
+    Coord to = { from.r + l, from.c + l };
+    for (int i = 0; i < k; i++) {
+        if (from.r <= stars[i].r && stars[i].r <= to.r
+            && from.c <= stars[i].c && stars[i].c <= to.c)
+            counter++;
+    }
+    return (counter);
+}
+
+int main(void)
+{
+    std::cin >> n >> m >> l >> k;
+    for (int i = 0; i < k; i++) {
+        Coord star;
+        std::cin >> star.r >> star.c;
+        stars.push_back(star);
+    }
+    int maxStars = 0;
+    if (k == 1) {
+        maxStars = 1;
+    } else {
+        for (int i = 0; i < k; i++) {
+            for (int j = i + 1; j < k; j++) {
+                Coord from = { std::min(stars[i].r, stars[j].r), std::min(stars[i].c, stars[j].c) };
+                maxStars = std::max(maxStars, countStarFrom(from));
+            }
+        }
+    }
+    std::cout << k - maxStars << std::endl;
+    return (0);
+}
