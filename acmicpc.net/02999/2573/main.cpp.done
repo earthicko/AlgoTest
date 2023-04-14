@@ -1,0 +1,149 @@
+#include <iostream>
+#include <queue>
+
+typedef struct coord_s
+{
+	int r;
+	int c;
+} coord_t;
+
+coord_t operator+(const coord_t &lhs, const coord_t &rhs)
+{
+	coord_t res = {lhs.r + rhs.r, lhs.c + rhs.c};
+	return (res);
+}
+
+const int nmax = 300;
+int h, w;
+const coord_t dirs[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+bool isOOB(const coord_t &coord)
+{
+	return (coord.r < 0 || coord.c < 0 || coord.r >= h || coord.c >= w);
+}
+
+class Map
+{
+public:
+	int data[nmax][nmax];
+	Map(void)
+	{
+		for (int r = 0; r < h; r++)
+			for (int c = 0; c < w; c++)
+				data[r][c] = 0;
+	}
+	void set(const coord_t &coord, int val)
+	{
+		data[coord.r][coord.c] = val;
+	}
+	int get(const coord_t &coord)
+	{
+		return (data[coord.r][coord.c]);
+	}
+	void set(int r, int c, int val)
+	{
+		data[r][c] = val;
+	}
+	int get(int r, int c)
+	{
+		return (data[r][c]);
+	}
+};
+
+Map map;
+
+void fill(Map &visited, int r, int c)
+{
+	std::queue<coord_t> coordq;
+	coord_t start = {r, c};
+	coordq.push(start);
+	while (!coordq.empty())
+	{
+		coord_t here = coordq.front();
+		coordq.pop();
+		for (int i = 0; i < 4; i++)
+		{
+			coord_t next = here + dirs[i];
+			if (isOOB(next))
+				continue;
+			if (visited.get(next) || map.get(next) == 0)
+				continue;
+			visited.set(next, 1);
+			coordq.push(next);
+		}
+	}
+}
+
+int countIslands(void)
+{
+	Map visited;
+	int counter = 0;
+	for (int r = 0; r < h; r++)
+	{
+		for (int c = 0; c < w; c++)
+		{
+			if (map.get(r, c) > 0 && !visited.get(r, c))
+			{
+				fill(visited, r, c);
+				counter++;
+			}
+		}
+	}
+	return (counter);
+}
+
+void melt(void)
+{
+	Map adjSea;
+	for (int r = 0; r < h; r++)
+	{
+		for (int c = 0; c < w; c++)
+		{
+			coord_t here = {r, c};
+			if (map.get(here) == 0)
+				continue;
+			for (int i = 0; i < 4; i++)
+			{
+				coord_t adj = here + dirs[i];
+				if (isOOB(adj))
+					continue;
+				if (map.get(adj) == 0)
+					adjSea.data[r][c]++;
+			}
+		}
+	}
+	for (int r = 0; r < h; r++)
+	{
+		for (int c = 0; c < w; c++)
+		{
+			map.data[r][c] -= adjSea.data[r][c];
+			if (map.data[r][c] < 0)
+				map.data[r][c] = 0;
+		}
+	}
+}
+
+int main(void)
+{
+	std::cin >> h >> w;
+	for (int r = 0; r < h; r++)
+		for (int c = 0; c < w; c++)
+			std::cin >> map.data[r][c];
+
+	int years = 0;
+	while (true)
+	{
+		int nIslands = countIslands();
+		if (nIslands > 1)
+			break;
+		if (nIslands == 0)
+		{
+			years = 0;
+			break;
+		}
+		melt();
+		years++;
+	}
+	std::cout << years << std::endl;
+	return (0);
+}

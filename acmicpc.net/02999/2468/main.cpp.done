@@ -1,0 +1,108 @@
+#include <iostream>
+#include <queue>
+
+typedef struct coord_s
+{
+	int r;
+	int c;
+} coord_t;
+
+coord_t operator+(const coord_t &a, const coord_t &b)
+{
+	coord_t ret = {a.r + b.r, a.c + b.c};
+	return (ret);
+}
+
+const coord_t dirs[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+const int nmax = 100;
+int n;
+
+bool isOOB(const coord_t &coord)
+{
+	return (coord.r < 0 || coord.r >= n || coord.c < 0 || coord.c >= n);
+}
+
+class Map
+{
+public:
+	int data[nmax][nmax];
+	Map(void)
+	{
+		for (int r = 0; r < n; r++)
+			for (int c = 0; c < n; c++)
+				data[r][c] = 0;
+	}
+	void set(const coord_t &coord, int val)
+	{
+		data[coord.r][coord.c] = val;
+	}
+	int get(const coord_t &coord)
+	{
+		return (data[coord.r][coord.c]);
+	}
+};
+
+Map map;
+
+void fill(Map &visited, int r, int c, int height)
+{
+	std::queue<coord_t> coordqueue;
+	coord_t start = {r, c};
+	coordqueue.push(start);
+	while (!coordqueue.empty())
+	{
+		coord_t here = coordqueue.front();
+		coordqueue.pop();
+		for (int i = 0; i < 4; i++)
+		{
+			coord_t next = here + dirs[i];
+			if (isOOB(next))
+				continue;
+			if (visited.get(next) || map.get(next) <= height)
+				continue;
+			visited.set(next, 1);
+			coordqueue.push(next);
+		}
+	}
+}
+
+int getNSeparateArea(int height)
+{
+	Map visited;
+	int counter = 0;
+	for (int r = 0; r < n; r++)
+	{
+		for (int c = 0; c < n; c++)
+		{
+			if (visited.data[r][c] == 0 && map.data[r][c] > height)
+			{
+				fill(visited, r, c, height);
+				counter++;
+			}
+		}
+	}
+	return (counter);
+}
+
+int main(void)
+{
+	int minh = 101;
+	int maxh = 0;
+	std::cin >> n;
+	for (int r = 0; r < n; r++)
+	{
+		for (int c = 0; c < n; c++)
+		{
+			std::cin >> map.data[r][c];
+			minh = std::min(minh, map.data[r][c]);
+			maxh = std::max(maxh, map.data[r][c]);
+		}
+	}
+	int maxNArea = 0;
+	for (int i = minh - 1; i <= maxh; i++)
+	{
+		maxNArea = std::max(maxNArea, getNSeparateArea(i));
+	}
+	std::cout << maxNArea << std::endl;
+	return (0);
+}
