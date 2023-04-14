@@ -1,0 +1,57 @@
+#include <iostream>
+#include <queue>
+
+// #define DEBUG
+
+#ifdef DEBUG
+#include <cstdio>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+const int nmax = 10000;
+const int dmax = 1000000;
+int n;
+int fuel[dmax + 1];
+int l, p;
+std::priority_queue<int> seenFuels;
+
+int main(void)
+{
+	std::cin >> n;
+	for (int i = 0; i < n; i++)
+	{
+		int a, b;
+		std::cin >> a >> b;
+		fuel[a] = b;
+	}
+	std::cin >> l >> p;
+
+	int nStops = 0;
+	for (int i = 1; i < l; i++)
+	{
+		p--;
+		PRINTF("At %d, fuel left %d\n", i, p);
+		if (fuel[i] > 0)
+		{
+			seenFuels.push(fuel[i]);
+			PRINTF("push %d to fuel\n", fuel[i]);
+		}
+		if (p == 0)
+		{
+			PRINTF("fuel empty, seek for seen fuels\n");
+			if (seenFuels.empty())
+			{
+				std::cout << "-1\n";
+				return (0);
+			}
+			p += seenFuels.top();
+			seenFuels.pop();
+			nStops++;
+			PRINTF("Fuel increased to %d, n stops %d\n", p, nStops);
+		}
+	}
+	std::cout << nStops << "\n";
+	return (0);
+}

@@ -1,0 +1,34 @@
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+
+const int nmax = 50;
+int k, n;
+int numbers[nmax];
+int maxnumber;
+
+bool comp(const int &l, const int &r)
+{
+	std::ostringstream lfirst;
+	std::ostringstream rfirst;
+	lfirst << l << r;
+	rfirst << r << l;
+	return (lfirst.str() > rfirst.str());
+}
+
+int main(void)
+{
+	std::cin >> k >> n;
+	for (int i = 0; i < k; i++)
+	{
+		std::cin >> numbers[i];
+		maxnumber = std::max(maxnumber, numbers[i]);
+	}
+	for (int i = k; i < n; i++)
+		numbers[i] = maxnumber;
+	std::sort(numbers, numbers + n, comp);
+	for (int i = 0; i < n; i++)
+		std::cout << numbers[i];
+	std::cout << std::endl;
+	return (0);
+}
