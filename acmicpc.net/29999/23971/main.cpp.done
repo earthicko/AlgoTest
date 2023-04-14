@@ -1,0 +1,16 @@
+#include <iostream>
+
+int main(void)
+{
+	int h, w, n, m;
+	std::cin >> h >> w >> n >> m;
+
+	int perRow = 0;
+	for (int c = 0; c < w; c += (m + 1))
+		perRow++;
+	int perCol = 0;
+	for (int r = 0; r < h; r += (n + 1))
+		perCol++;
+	std::cout << perRow * perCol << std::endl;
+	return (0);
+}

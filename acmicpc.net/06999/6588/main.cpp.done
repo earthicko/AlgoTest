@@ -1,0 +1,55 @@
+#include <cstdio>
+#include <vector>
+
+// #define _DEBUG
+#ifdef _DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+const int maxn = 1000000;
+int notPrime[maxn + 1];
+
+void buildPrime(void)
+{
+    for (int i = 2; i < maxn + 1; i += 2)
+        notPrime[i] = 1;
+    int i = 3;
+    while (i < maxn + 1) {
+        for (int div = i * 2; div < maxn + 1; div += i)
+            notPrime[div] = 1;
+        i += 2;
+        while (notPrime[i] && i < maxn + 1)
+            i += 2;
+    }
+}
+
+void solve(int n)
+{
+    int primeA = 3;
+    int primeB = n - 3;
+    while (primeA <= primeB) {
+        if (notPrime[primeA] == 0 && notPrime[primeB] == 0) {
+            printf("%d = %d + %d\n", n, primeA, primeB);
+            return;
+        }
+        primeA += 2;
+        primeB -= 2;
+    }
+    printf("Goldbach's conjecture is wrong.\n");
+}
+
+int main(void)
+{
+    buildPrime();
+    PRINTF("Build prime done\n");
+    while (true) {
+        int n;
+        scanf("%d", &n);
+        if (n == 0)
+            break;
+        solve(n);
+    }
+    return (0);
+}

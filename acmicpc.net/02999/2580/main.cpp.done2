@@ -1,0 +1,102 @@
+#include <cstring>
+#include <iostream>
+#include <vector>
+
+typedef struct coord_s {
+    int r;
+    int c;
+} coord_t;
+
+class Sudoku {
+private:
+    int _nums[9][9];
+    bool _rowfilled[9][10];
+    bool _colfilled[9][10];
+    bool _sectorfilled[3][3][10];
+
+public:
+    Sudoku(void)
+    {
+        bzero(_nums, sizeof(_nums));
+        bzero(_rowfilled, sizeof(_rowfilled));
+        bzero(_colfilled, sizeof(_colfilled));
+        bzero(_sectorfilled, sizeof(_sectorfilled));
+    }
+    const int& getNum(const int r, const int c) const
+    {
+        return (_nums[r][c]);
+    }
+    bool canPut(const int r, const int c, const int num) const
+    {
+        if (_rowfilled[r][num])
+            return (false);
+        if (_colfilled[c][num])
+            return (false);
+        if (_sectorfilled[r / 3][c / 3][num])
+            return (false);
+        return (true);
+    }
+    void setNum(const int r, const int c, const int num)
+    {
+        _rowfilled[r][num] = true;
+        _colfilled[c][num] = true;
+        _sectorfilled[r / 3][c / 3][num] = true;
+        _nums[r][c] = num;
+    }
+    void unsetNum(const int r, const int c)
+    {
+        _rowfilled[r][_nums[r][c]] = false;
+        _colfilled[c][_nums[r][c]] = false;
+        _sectorfilled[r / 3][c / 3][_nums[r][c]] = false;
+        _nums[r][c] = 0;
+    }
+};
+
+std::ostream& operator<<(std::ostream& os, const Sudoku& s)
+{
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            os << s.getNum(r, c) << " ";
+        }
+        os << "\n";
+    }
+    return (os);
+}
+
+std::vector<coord_t> emptyCoords;
+
+bool solve(Sudoku& s, int idx)
+{
+    if (idx == emptyCoords.size())
+        return (true);
+    int r = emptyCoords[idx].r;
+    int c = emptyCoords[idx].c;
+    for (int i = 1; i <= 9; i++) {
+        if (!s.canPut(r, c, i))
+            continue;
+        s.setNum(r, c, i);
+        if (solve(s, idx + 1))
+            return (true);
+        s.unsetNum(r, c);
+    }
+    return (false);
+}
+
+int main(void)
+{
+    Sudoku sudoku;
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            int num;
+            std::cin >> num;
+            sudoku.setNum(r, c, num);
+            if (num == 0) {
+                coord_t coord = { r, c };
+                emptyCoords.push_back(coord);
+            }
+        }
+    }
+    solve(sudoku, 0);
+    std::cout << sudoku;
+    return (0);
+}

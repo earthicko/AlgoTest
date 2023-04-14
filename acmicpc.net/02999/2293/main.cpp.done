@@ -1,0 +1,20 @@
+#include <iostream>
+
+const int maxn = 100;
+const int maxk = 10000;
+int n, k;
+int coinVal[maxn];
+int nCombinations[maxk + 1];
+
+int main(void)
+{
+	std::cin >> n >> k;
+	for (int i = 0; i < n; i++)
+		std::cin >> coinVal[i];
+	nCombinations[0] = 1;
+	for (int i = 0; i < n; i++)
+		for (int target = coinVal[i]; target <= k; target++)
+			nCombinations[target] += nCombinations[target - coinVal[i]];
+	std::cout << nCombinations[k] << "\n";
+	return (0);
+}

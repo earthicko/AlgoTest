@@ -1,0 +1,29 @@
+#include <algorithm>
+#include <cstdio>
+#include <iostream>
+#include <queue>
+
+typedef long long ll_t;
+
+int main(void)
+{
+    int n;
+    std::priority_queue<ll_t, std::vector<ll_t>, std::greater<ll_t> > stacks;
+    std::cin >> n;
+    for (int i = 0; i < n; i++) {
+        ll_t buf;
+        std::cin >> buf;
+        stacks.push(buf);
+    }
+    ll_t result = 0;
+    while (stacks.size() > 1) {
+        ll_t first = stacks.top();
+        stacks.pop();
+        ll_t second = stacks.top();
+        stacks.pop();
+        result += (first + second);
+        stacks.push(first + second);
+    }
+    std::cout << result << "\n";
+    return (0);
+}

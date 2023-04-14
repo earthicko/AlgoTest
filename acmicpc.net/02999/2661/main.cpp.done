@@ -1,0 +1,85 @@
+#include <iostream>
+
+// #define _DEBUG
+
+const int maxn = 80;
+int n;
+int digits[maxn];
+
+void printDigits(void)
+{
+    for (int i = 0; i < n; i++)
+        std::cout << digits[i];
+    std::cout << "\n";
+}
+
+enum e_state {
+    BREAK = 0,
+    GOOD,
+    BAD
+};
+
+int checkIfGoodInWidth(int idx, int width)
+{
+    // 0 1 2 3 4 5
+    //           |
+    //     f   l
+    int latterIdx = idx - (width - 1);
+    int formerIdx = latterIdx - width;
+    if (latterIdx < 0 || formerIdx < 0)
+        return (BREAK);
+    bool allMatch = true;
+    for (int offset = 0; offset < width; offset++) {
+        if (digits[formerIdx + offset] != digits[latterIdx + offset]) {
+            allMatch = false;
+            break;
+        }
+    }
+    if (allMatch)
+        return (BAD);
+    else
+        return (GOOD);
+}
+
+bool checkIfGood(int idx)
+{
+    int width = 1;
+    while (true) {
+        int ret = checkIfGoodInWidth(idx, width);
+        switch (ret) {
+        case BREAK:
+            return (true);
+            break;
+        case GOOD:
+            width++;
+            continue;
+        case BAD:
+            return (false);
+        }
+    }
+}
+
+void determineDigit(int idx)
+{
+    if (idx == n) {
+        printDigits();
+        exit(0);
+    }
+    for (int i = 1; i <= 3; i++) {
+        digits[idx] = i;
+        if (checkIfGood(idx)) {
+#ifdef _DEBUG
+            std::cout << "idx " << idx << " ";
+            printDigits();
+#endif
+            determineDigit(idx + 1);
+        }
+    }
+}
+
+int main(void)
+{
+    std::cin >> n;
+    determineDigit(0);
+    return (0);
+}

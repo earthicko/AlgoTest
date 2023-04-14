@@ -1,0 +1,70 @@
+#include <iostream>
+#include <queue>
+#include <cstring>
+
+typedef struct scope_s
+{
+	int a;
+	int b;
+} scope_t;
+
+bool operator>(const scope_t &a, const scope_t &b)
+{
+	if (a.b < b.b)
+		return (true);
+	if (a.b > b.b)
+		return (false);
+	if (a.a < b.a)
+		return (true);
+	return (false);
+}
+
+bool operator<(const scope_t &a, const scope_t &b)
+{
+	if (a.b > b.b)
+		return (true);
+	if (a.b < b.b)
+		return (false);
+	if (a.a > b.a)
+		return (true);
+	return (false);
+}
+
+const int nmax = 1000;
+int n, m;
+int borrowed[nmax + 1];
+
+int main(void)
+{
+	int nTests;
+	std::cin >> nTests;
+	for (int i = 0; i < nTests; i++)
+	{
+		std::cin >> n >> m;
+		std::priority_queue<scope_t> queue;
+		for (int j = 0; j < m; j++)
+		{
+			scope_t scope;
+			std::cin >> scope.a >> scope.b;
+			queue.push(scope);
+		}
+		memset(borrowed, 0, sizeof(borrowed));
+		int counter = 0;
+		while (!queue.empty())
+		{
+			scope_t scope = queue.top();
+			queue.pop();
+			for (int j = scope.a; j <= scope.b; j++)
+			{
+				if (borrowed[j] == 0)
+				{
+					borrowed[j] = 1;
+					counter++;
+					break;
+				}
+			}
+		}
+		std::cout << counter << "\n";
+	}
+	return (0);
+}

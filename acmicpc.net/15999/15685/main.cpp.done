@@ -1,0 +1,106 @@
+#include <cstdio>
+#include <iostream>
+#include <vector>
+
+const int maxn = 101;
+
+int coords[maxn][maxn];
+int n;
+
+class Point {
+public:
+    Point(int x, int y)
+        : _x(x)
+        , _y(y)
+    {
+    }
+    Point(const Point& orig)
+        : _x(orig._x)
+        , _y(orig._y)
+    {
+    }
+    void rotateCW(const Point& origin)
+    {
+        int dx = origin._x - _x;
+        int dy = origin._y - _y;
+        _x = origin._x + dy;
+        _y = origin._y - dx;
+    }
+    int getX(void) const { return (_x); }
+    int getY(void) const { return (_y); }
+    void mark(void) const { coords[_x][_y] = 1; }
+
+private:
+    int _x;
+    int _y;
+};
+std::ostream& operator<<(std::ostream& os, const Point& pt)
+{
+    os << "(" << pt.getX() << ", " << pt.getY() << ")";
+    return (os);
+}
+
+class DragonCurve {
+public:
+    DragonCurve(int startx, int starty, int direction, int gen)
+    {
+        _gen = 0;
+        _points.push_back(Point(startx, starty));
+        switch (direction) {
+        case 0:
+            _points.push_back(Point(startx + 1, starty));
+            break;
+        case 1:
+            _points.push_back(Point(startx, starty - 1));
+            break;
+        case 2:
+            _points.push_back(Point(startx - 1, starty));
+            break;
+        case 3:
+            _points.push_back(Point(startx, starty + 1));
+            break;
+        }
+        for (int i = 0; i < gen; i++)
+            generate();
+    }
+    void generate(void)
+    {
+        int nRotated = _points.size() - 1;
+        const Point& origin = _points.back();
+        for (int i = nRotated - 1; i >= 0; i--) {
+            _points.push_back(Point(_points[i]));
+            _points.back().rotateCW(origin);
+        }
+        _gen++;
+    }
+    void mark(void)
+    {
+        for (int i = 0; i < _points.size(); i++)
+            _points[i].mark();
+    }
+
+private:
+    int _gen;
+    std::vector<Point> _points;
+};
+
+int main(void)
+{
+    std::cin >> n;
+    for (int i = 0; i < n; i++) {
+        int x, y, d, g;
+        std::cin >> x >> y >> d >> g;
+        DragonCurve curve(x, y, d, g);
+        curve.mark();
+    }
+    int counter = 0;
+    for (int x = 0; x < maxn - 1; x++) {
+        for (int y = 0; y < maxn - 1; y++) {
+            if (coords[x][y] && coords[x + 1][y] && coords[x][y + 1] && coords[x + 1][y + 1]) {
+                counter++;
+            }
+        }
+    }
+    std::cout << counter << "\n";
+    return (0);
+}

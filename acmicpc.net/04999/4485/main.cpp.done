@@ -1,0 +1,91 @@
+#include <iostream>
+#include <queue>
+#include <limits>
+
+#define NMAX 125
+#define LOSSMAX 9
+
+typedef struct coord_s
+{
+	int r;
+	int c;
+} Coord;
+
+bool isOOB(const Coord &coord, int n)
+{
+	return (coord.r < 0 || coord.r >= n || coord.c < 0 || coord.c >= n);
+}
+
+Coord operator+(const Coord &lhs, const Coord &rhs)
+{
+	Coord ret = {lhs.r + rhs.r, lhs.c + rhs.c};
+	return (ret);
+}
+
+const Coord dirs[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+const Coord start = {0, 0};
+
+class Map
+{
+public:
+	int data[NMAX][NMAX];
+	Map(int n, int val)
+	{
+		for (int r = 0; r < n; r++)
+			for (int c = 0; c < n; c++)
+				data[r][c] = val;
+	}
+	int &at(const Coord &coord)
+	{
+		return (data[coord.r][coord.c]);
+	}
+	int &at(int r, int c)
+	{
+		return (data[r][c]);
+	}
+};
+
+void doBFS(Map &rupee, Map &minLoss, int n)
+{
+	std::queue<Coord> willvisit;
+	willvisit.push(start);
+	minLoss.at(start) = rupee.at(start);
+	while (!willvisit.empty())
+	{
+		Coord here = willvisit.front();
+		willvisit.pop();
+		for (int i = 0; i < 4; i++)
+		{
+			Coord next = here + dirs[i];
+			if (isOOB(next, n))
+				continue;
+			int newLoss = minLoss.at(here) + rupee.at(next);
+			if (newLoss < minLoss.at(next))
+			{
+				minLoss.at(next) = newLoss;
+				willvisit.push(next);
+			}
+		}
+	}
+}
+
+int main(void)
+{
+	int problemIdx = 0;
+	while (true)
+	{
+		problemIdx++;
+		int n;
+		std::cin >> n;
+		Map rupee(n, 0);
+		Map minLoss(n, NMAX * NMAX * LOSSMAX + 1);
+		if (n == 0)
+			break;
+		for (int r = 0; r < n; r++)
+			for (int c = 0; c < n; c++)
+				std::cin >> rupee.at(r, c);
+		doBFS(rupee, minLoss, n);
+		std::cout << "Problem " << problemIdx << ": " << minLoss.at(n - 1, n - 1) << std::endl;
+	}
+	return (0);
+}

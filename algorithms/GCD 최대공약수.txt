@@ -1,0 +1,8 @@
+GCD(a, b) = GCD(b, a % b)
+
+a > b인 a, b에 대하여
+
+b가 0보다 클 동안:
+    새로운 b = a % b
+    새로운 a = b
+a가 GCD

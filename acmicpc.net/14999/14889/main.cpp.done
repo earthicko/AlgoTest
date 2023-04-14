@@ -1,0 +1,94 @@
+#include <cstdio>
+#include <vector>
+#include <limits.h>
+#include <algorithm>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+#define MAX_N 20
+
+int n;
+int indices[MAX_N];
+bool selected[MAX_N];
+int synergy[MAX_N][MAX_N];
+int minDiff = INT_MAX;
+
+void updateDiff(std::vector<int> &teamA, std::vector<int> &teamB)
+{
+	int teamAsynergy = 0;
+	int teamBsynergy = 0;
+	for (int i = 0; i < teamA.size(); i++)
+	{
+		for (int j = i + 1; j < teamA.size(); j++)
+		{
+			teamAsynergy += synergy[teamA[i]][teamA[j]];
+			teamBsynergy += synergy[teamB[i]][teamB[j]];
+		}
+	}
+	int diff = std::abs(teamAsynergy - teamBsynergy);
+	minDiff = std::min(minDiff, diff);
+}
+
+void getSelection(int *arr, int arrLen, int currIdx, bool *selectedMap, int nSelected, int maxN)
+{
+	if (currIdx >= arrLen)
+		return;
+	if (nSelected == maxN)
+	{
+		std::vector<int> teamA;
+		std::vector<int> teamB;
+		for (int i = 0; i < arrLen; i++)
+		{
+			if (selected[i])
+				DEBUG_PRINTF("%2d ", arr[i]);
+		}
+		DEBUG_PRINTF(" | ");
+		for (int i = 0; i < arrLen; i++)
+		{
+			if (!selected[i])
+				DEBUG_PRINTF("%2d ", arr[i]);
+		}
+		DEBUG_PRINTF("\n");
+		for (int i = 0; i < arrLen; i++)
+		{
+			if (selected[i])
+				teamA.push_back(arr[i]);
+			else
+				teamB.push_back(arr[i]);
+		}
+		updateDiff(teamA, teamB);
+		return;
+	}
+	selectedMap[currIdx] = true;
+	getSelection(arr, arrLen, currIdx + 1, selectedMap, nSelected + 1, maxN);
+	selectedMap[currIdx] = false;
+	getSelection(arr, arrLen, currIdx + 1, selectedMap, nSelected, maxN);
+}
+
+int main(void)
+{
+	scanf("%d", &n);
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			int s;
+			scanf("%d", &s);
+			if (i < j)
+				synergy[i][j] += s;
+			else
+				synergy[j][i] += s;
+		}
+	}
+	for (int i = 0; i < n; i++)
+		indices[i] = i;
+	getSelection(indices, n, 0, selected, 0, n / 2);
+	printf("%d\n", minDiff);
+	return (0);
+}

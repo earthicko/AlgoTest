@@ -1,0 +1,279 @@
+#include <cstdio>
+#include <cassert>
+#include <vector>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+enum e_area
+{
+	EMPTY = 0,
+	WALL = 6,
+	FILL = 99
+};
+
+enum e_dir
+{
+	UP = 0,
+	LEFT = 1,
+	DOWN = 2,
+	RIGHT = 3
+};
+
+int	dirs[4][2] = {{-1, 0, }, {0, -1, }, {1, 0, }, {0, 1, }, };
+
+class	CCTV;
+
+class	Room
+{
+public:
+	int maxr;
+	int	maxc;
+	int *areas;
+	Room(int n, int m);
+	void	initialize(void);
+	void	fillAll(void);
+	bool	increment(void);
+	int		countUnseenArea(void);
+	int		getArea(int r, int c);
+	void	setArea(int r, int c, int areaType);
+	void	print(void)
+	{
+		for (int i = 0; i < maxr; i++)
+		{
+			for (int j = 0; j < maxc; j++)
+			{
+				switch (getArea(i, j))
+				{
+				case EMPTY:
+					DEBUG_PRINTF(". ");
+					break;
+				case WALL:
+					DEBUG_PRINTF("| ");
+					break;
+				case FILL:
+					DEBUG_PRINTF("# ");
+					break;
+				default:
+					DEBUG_PRINTF("%d ", getArea(i, j));
+					break;
+				}
+			}
+			DEBUG_PRINTF("\n");
+		}
+	}
+	std::vector<CCTV>	cctvs;
+	std::vector<int>	cctvDir;
+};
+
+class	CCTV
+{
+public:
+	Room		*room;
+	int			viewdir[4];
+	int			dir;
+	const int	r;
+	const int	c;
+	CCTV(Room *_room, int type, int _r, int _c): r(_r), c(_c)
+	{
+		room = _room;
+		dir = UP;
+		for (int i = 0; i < 4; i++)
+			viewdir[i] = -1;
+		switch (type)
+		{
+		case 1:
+			viewdir[0] = RIGHT;
+			break;
+		case 2:
+			viewdir[0] = RIGHT;
+			viewdir[1] = LEFT;
+			break;
+		case 3:
+			viewdir[0] = UP;
+			viewdir[1] = RIGHT;
+			break;
+		case 4:
+			viewdir[0] = LEFT;
+			viewdir[1] = UP;
+			viewdir[2] = RIGHT;
+			break;
+		case 5:
+			viewdir[0] = LEFT;
+			viewdir[1] = UP;
+			viewdir[2] = RIGHT;
+			viewdir[3] = DOWN;
+			break;
+		default:
+			break;
+		}
+	}
+	void	filldir(int thisdir)
+	{
+		assert(0 <= thisdir && thisdir < 4);
+		int	newr = r + dirs[thisdir][0];
+		int	newc = c + dirs[thisdir][1];
+		while (true)
+		{
+			if (newr < 0 || newr >= room->maxr || newc < 0 || newc >= room->maxc)
+				return;
+			switch (room->getArea(newr, newc))
+			{
+			case EMPTY:
+				room->setArea(newr, newc, FILL);
+				break;
+			case WALL:
+				return;
+			default:
+				break;
+			}
+			newr += dirs[thisdir][0];
+			newc += dirs[thisdir][1];
+		}
+	}
+	void	fill(void)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (viewdir[i] < 0)
+				continue;
+			int	thisdir = (viewdir[i] + dir) % 4;
+			filldir(thisdir);
+		}
+	}
+	void	setDir(int newdir)
+	{
+		dir = newdir;
+	}
+};
+
+Room::Room(int n, int m)
+{
+	areas = new int[n * m];
+	maxr = n;
+	maxc = m;
+	for (int r = 0; r < maxr; r++)
+	{
+		for (int c = 0; c < maxc; c++)
+		{
+			setArea(r, c, EMPTY);
+		}
+	}
+}
+
+void	Room::initialize(void)
+{
+	for (int r = 0; r < maxr; r++)
+	{
+		for (int c = 0; c < maxc; c++)
+		{
+			if (getArea(r, c) == FILL)
+				setArea(r, c, EMPTY);
+		}
+	}
+}
+
+void	Room::fillAll(void)
+{
+	for (int i = 0; i < cctvDir.size(); i++)
+	{
+		cctvs[i].setDir(cctvDir[i]);
+		cctvs[i].fill();
+	}
+}
+
+bool	Room::increment(void)
+{
+	DEBUG_PRINTF("Combination ");
+	for (int i = 0; i < cctvDir.size(); i++)
+		DEBUG_PRINTF("%d ", cctvDir[i]);
+	DEBUG_PRINTF("\n");
+
+	for (int i = cctvDir.size() - 1; i >= 0; i--)
+	{
+		cctvDir[i]++;
+		if (cctvDir[i] >= 4)
+		{
+			if (i == 0)
+				return (true);
+			cctvDir[i] = 0;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return (false);
+}
+
+int		Room::countUnseenArea(void)
+{
+	int nUnseenArea = 0;
+	for (int r = 0; r < maxr; r++)
+	{
+		for (int c = 0; c < maxc; c++)
+		{
+			if (getArea(r, c) == EMPTY)
+				nUnseenArea++;
+		}
+	}
+	return (nUnseenArea);
+}
+
+int		Room::getArea(int r, int c)
+{
+	assert(0 <= r && r < maxr && 0 <= c && c < maxc);
+	return (areas[r * maxc + c]);
+}
+
+void	Room::setArea(int r, int c, int areaType)
+{
+	assert(0 <= r && r < maxr && 0 <= c && c < maxc);
+	areas[r * maxc + c] = areaType;
+	if (1 <= areaType && areaType <= 5)
+	{
+		cctvs.push_back(CCTV(this, areaType, r, c));
+		cctvDir.push_back(UP);
+	}
+}
+
+int	main(void)
+{
+	int n, m;
+	scanf("%d%d", &n, &m);
+	Room	room(n, m);
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < m; j++)
+		{
+			int area;
+			scanf("%d", &area);
+			room.setArea(i, j, area);
+		}
+	}
+	int minUnseenArea = 100;
+	if (room.cctvs.size() == 0)
+	{
+		minUnseenArea = room.countUnseenArea();
+	}
+	else
+	{
+		while (true)
+		{
+			room.fillAll();
+			room.print();
+			int nUnseenArea = room.countUnseenArea();
+			minUnseenArea = std::min(nUnseenArea, minUnseenArea);
+			if (room.increment())
+				break;
+			room.initialize();
+		}
+	}
+	printf("%d\n", minUnseenArea);
+	return (0);
+}

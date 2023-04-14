@@ -1,0 +1,46 @@
+#include <iostream>
+#include <vector>
+
+const int nmax = 100;
+int n;
+std::vector<int> connection[nmax];
+int visited[nmax];
+
+int getNConnection(int start, int end, int counter)
+{
+	visited[start] = 1;
+	if (start == end)
+		return (counter);
+	for (int i = 0; i < connection[start].size(); i++)
+	{
+		if (visited[connection[start][i]])
+			continue;
+		int result = getNConnection(connection[start][i], end, counter + 1);
+		if (result >= 0)
+			return (result);
+	}
+	return (-1);
+}
+
+int main(void)
+{
+	int targetA, targetB;
+	int m;
+	std::cin >> n;
+	std::cin >> targetA >> targetB;
+	targetA--;
+	targetB--;
+	std::cin >> m;
+	for (int i = 0; i < m; i++)
+	{
+		int from, to;
+		std::cin >> from >> to;
+		from--;
+		to--;
+		connection[from].push_back(to);
+		connection[to].push_back(from);
+	}
+	int nConnection = getNConnection(targetA, targetB, 0);
+	std::cout << nConnection << std::endl;
+	return (0);
+}

@@ -1,0 +1,145 @@
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <queue>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+const int maxn = 50;
+int n, mindiff, maxdiff;
+int a[maxn][maxn];
+int unionIdx[maxn][maxn];
+int avgMarking[maxn][maxn];
+
+void printA(void)
+{
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++)
+            DEBUG_PRINTF("%d ", a[r][c]);
+        DEBUG_PRINTF("\n");
+    }
+}
+
+void printIdx(void)
+{
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++)
+            DEBUG_PRINTF("%d ", unionIdx[r][c]);
+        DEBUG_PRINTF("\n");
+    }
+}
+
+void initialize(void)
+{
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            unionIdx[i][j] = -1;
+            avgMarking[i][j] = 0;
+        }
+    }
+}
+
+bool markUnionFrom(int r, int c, int idx)
+{
+    static const int dir[4][2] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+    int sum = 0;
+    int nUnion = 0;
+    std::queue<std::pair<int, int> > nextCoord;
+    nextCoord.push(std::make_pair(r, c));
+    unionIdx[r][c] = idx;
+    sum += a[r][c];
+    while (!nextCoord.empty()) {
+        int currentR = nextCoord.front().first;
+        int currentC = nextCoord.front().second;
+        nUnion++;
+        nextCoord.pop();
+        for (int i = 0; i < 4; i++) {
+            int nextR = currentR + dir[i][0];
+            int nextC = currentC + dir[i][1];
+            if (nextR < 0 || nextR >= n || nextC < 0 || nextC >= n)
+                continue;
+            if (unionIdx[nextR][nextC] != -1)
+                continue;
+            int diff = std::abs(a[nextR][nextC] - a[currentR][currentC]);
+            // DEBUG_PRINTF("(%d, %d) (%d, %d) diff %d\n", currentR, currentC, nextR, nextC, diff);
+            if (!(mindiff <= diff && diff <= maxdiff))
+                continue;
+            nextCoord.push(std::make_pair(nextR, nextC));
+            unionIdx[nextR][nextC] = idx;
+            sum += a[nextR][nextC];
+            DEBUG_PRINTF("at (%d, %d) add %d sum %d\n", nextR, nextC, a[nextR][nextC], sum);
+            // DEBUG_PRINTF("push (%d, %d)\n", nextR, nextC);
+        }
+    }
+    int avg = sum / nUnion;
+    DEBUG_PRINTF("Idx %d sum %d n %d avg %d\n", idx, sum, nUnion, avg);
+    nextCoord.push(std::make_pair(r, c));
+    a[r][c] = avg;
+    avgMarking[r][c] = 1;
+    while (!nextCoord.empty()) {
+        int currentR = nextCoord.front().first;
+        int currentC = nextCoord.front().second;
+        nextCoord.pop();
+        for (int i = 0; i < 4; i++) {
+            int nextR = currentR + dir[i][0];
+            int nextC = currentC + dir[i][1];
+            if (nextR < 0 || nextR >= n || nextC < 0 || nextC >= n)
+                continue;
+            if (unionIdx[nextR][nextC] != idx || avgMarking[nextR][nextC] == 1)
+                continue;
+            nextCoord.push(std::make_pair(nextR, nextC));
+            a[nextR][nextC] = avg;
+            avgMarking[nextR][nextC] = 1;
+        }
+    }
+    return (nUnion > 1);
+}
+
+bool markUnion(void)
+{
+    bool hasUnion = false;
+    int idx = 0;
+    for (int r = 0; r < n; r++) {
+        for (int c = 0; c < n; c++) {
+            if (unionIdx[r][c] != -1)
+                continue;
+            // DEBUG_PRINTF("Mark from (%d, %d)\n", r, c);
+            if (markUnionFrom(r, c, idx))
+                hasUnion = true;
+            // DEBUG_PRINTF("Idx: \n");
+            // printIdx();
+            // DEBUG_PRINTF("A: \n");
+            // printA();
+            idx++;
+        }
+    }
+    return (hasUnion);
+}
+
+int main(void)
+{
+    std::cin >> n >> mindiff >> maxdiff;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            std::cin >> a[i][j];
+        }
+    }
+    int counter = 0;
+    while (true) {
+        initialize();
+        if (markUnion())
+            counter++;
+        else
+            break;
+        DEBUG_PRINTF("counter %d\n", counter);
+        printA();
+    }
+    std::cout << counter << "\n";
+    return (0);
+}

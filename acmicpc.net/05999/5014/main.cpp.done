@@ -1,0 +1,51 @@
+#include <iostream>
+#include <limits>
+#include <queue>
+
+const int maxf = 1000000;
+int nfloors;
+int startf, endf;
+int upf, downf;
+int minCounter[maxf];
+
+int main(void)
+{
+	std::cin >> nfloors >> startf >> endf >> upf >> downf;
+	for (int f = 0; f < nfloors; f++)
+		minCounter[f] = std::numeric_limits<int>::max();
+	startf--;
+	endf--;
+
+	std::queue<int> liftqueue;
+	minCounter[startf] = 0;
+	liftqueue.push(startf);
+	while (!liftqueue.empty())
+	{
+		int here = liftqueue.front();
+		liftqueue.pop();
+		int nextUp = here + upf;
+		int nextDown = here - downf;
+		int nextCount = minCounter[here] + 1;
+		if (0 <= nextUp && nextUp < nfloors)
+		{
+			if (minCounter[nextUp] > nextCount)
+			{
+				minCounter[nextUp] = nextCount;
+				liftqueue.push(nextUp);
+			}
+		}
+		if (0 <= nextDown && nextDown < nfloors)
+		{
+			if (minCounter[nextDown] > nextCount)
+			{
+				minCounter[nextDown] = nextCount;
+				liftqueue.push(nextDown);
+			}
+		}
+	}
+	if (minCounter[endf] == std::numeric_limits<int>::max())
+		std::cout << "use the stairs" << std::endl;
+	else
+		std::cout << minCounter[endf] << std::endl;
+	return (0);
+}

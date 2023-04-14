@@ -1,0 +1,157 @@
+#include <cstdio>
+#include <cstring>
+
+// #define _DEBUG
+
+#ifdef _DEBUG
+#define DEBUG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINTF(x, ...)
+#endif
+
+#define MAX_N 100
+
+int map[MAX_N][MAX_N];
+int n, l;
+
+int main(void)
+{
+	scanf("%d%d", &n, &l);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+			scanf("%d", &map[i][j]);
+
+	int nRoutes = 0;
+	for (int i = 0; i < n; i++)
+	{
+		DEBUG_PRINTF("Try row %d\n", i);
+		int prevH = map[i][0];
+		int j = 1;
+		int consecutiveH = 1;
+		while (true)
+		{
+			DEBUG_PRINTF("j = %d, h = %d, prev h = %d, cons = %d\n", j, map[i][j], prevH, consecutiveH);
+			if (j == n)
+			{
+				DEBUG_PRINTF("Row %d success\n", i);
+				for (int k = 0; k < n; k++)
+					DEBUG_PRINTF("%d ", map[i][k]);
+				DEBUG_PRINTF("\n");
+				nRoutes++;
+				break;
+			}
+			if (prevH == map[i][j])
+			{
+				DEBUG_PRINTF("Same height\n");
+				consecutiveH++;
+				prevH = map[i][j];
+				j++;
+				continue;
+			}
+			else if (prevH + 1 == map[i][j])
+			{
+				DEBUG_PRINTF("Upward\n");
+				if (consecutiveH >= l)
+				{
+					consecutiveH = 1;
+					prevH = map[i][j];
+					j++;
+					continue;
+				}
+				else
+					break;
+			}
+			else if (prevH - 1 == map[i][j])
+			{
+				DEBUG_PRINTF("Downward\n");
+				bool success = true;
+				for (int k = j + 1; k < j + l; k++)
+				{
+					if (k == n || map[i][k] != map[i][j])
+					{
+						success = false;
+						break;
+					}
+				}
+				if (success)
+				{
+					consecutiveH = 0;
+					prevH = map[i][j];
+					j = j + l;
+					continue;
+				}
+				else
+					break;
+			}
+			else
+				break;
+		}
+	}
+	for (int i = 0; i < n; i++)
+	{
+		DEBUG_PRINTF("Try row %d\n", i);
+		int prevH = map[0][i];
+		int j = 1;
+		int consecutiveH = 1;
+		while (true)
+		{
+			DEBUG_PRINTF("j = %d, h = %d, prev h = %d, cons = %d\n", j, map[j][i], prevH, consecutiveH);
+			if (j == n)
+			{
+				DEBUG_PRINTF("Row %d success\n", i);
+				for (int k = 0; k < n; k++)
+					DEBUG_PRINTF("%d ", map[k][i]);
+				DEBUG_PRINTF("\n");
+				nRoutes++;
+				break;
+			}
+			if (prevH == map[j][i])
+			{
+				DEBUG_PRINTF("Same height\n");
+				consecutiveH++;
+				prevH = map[j][i];
+				j++;
+				continue;
+			}
+			else if (prevH + 1 == map[j][i])
+			{
+				DEBUG_PRINTF("Upward\n");
+				if (consecutiveH >= l)
+				{
+					consecutiveH = 1;
+					prevH = map[j][i];
+					j++;
+					continue;
+				}
+				else
+					break;
+			}
+			else if (prevH - 1 == map[j][i])
+			{
+				DEBUG_PRINTF("Downward\n");
+				bool success = true;
+				for (int k = j + 1; k < j + l; k++)
+				{
+					if (k == n || map[k][i] != map[j][i])
+					{
+						success = false;
+						break;
+					}
+				}
+				if (success)
+				{
+					consecutiveH = 0;
+					prevH = map[j][i];
+					j = j + l;
+					continue;
+				}
+				else
+					break;
+			}
+			else
+				break;
+		}
+	}
+	printf("%d\n", nRoutes);
+	return (0);
+}

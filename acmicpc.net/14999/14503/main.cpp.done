@@ -1,0 +1,77 @@
+#include <cstdio>
+
+#define MAX_N 50
+#define WALL 1
+#define UNCLEANED 0
+#define CLEANED 2
+
+int n, m;
+int r, c;
+int d;
+int room[MAX_N][MAX_N];
+const int dirs[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+int counter;
+
+bool operate(void)
+{
+	if (room[r][c] == UNCLEANED) // 1.
+	{
+		room[r][c] = CLEANED;
+		counter++;
+	}
+
+	bool uncleanedAreaNearby = false;
+	for (int i = 0; i < 4; i++)
+	{
+		int newr = r + dirs[i][0];
+		int newc = c + dirs[i][1];
+		if (newr < 0 || newr >= n || newc < 0 || newc >= m)
+			continue;
+		if (room[newr][newc] == UNCLEANED)
+		{
+			uncleanedAreaNearby = true;
+			break;
+		}
+	}
+	if (uncleanedAreaNearby) // 3.
+	{
+		d = (d - 1 + 4) % 4;
+		int newr = r + dirs[d][0];
+		int newc = c + dirs[d][1];
+		if (room[newr][newc] == UNCLEANED)
+		{
+			r = newr;
+			c = newc;
+		}
+		return (false);
+	}
+	else // 2.
+	{
+		int newr = r + dirs[d][0] * -1;
+		int newc = c + dirs[d][1] * -1;
+		if (newr < 0 || newr >= n || newc < 0 || newc >= m)
+			return (true);
+		if (room[newr][newc] == WALL)
+			return (true);
+		r = newr;
+		c = newc;
+		return (false);
+	}
+}
+
+int main(void)
+{
+	scanf("%d%d", &n, &m);
+	scanf("%d%d%d", &r, &c, &d);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < m; j++)
+			scanf("%d", &room[i][j]);
+
+	while (true)
+	{
+		if (operate())
+			break;
+	}
+	printf("%d\n", counter);
+	return (0);
+}

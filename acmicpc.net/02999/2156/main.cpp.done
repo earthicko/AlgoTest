@@ -1,0 +1,31 @@
+#include <iostream>
+
+const int maxn = 10000;
+int n;
+int val[maxn];
+int maxSum[maxn][3];
+
+int maxInRow(int idx)
+{
+    int tmp = std::max(maxSum[idx][0], maxSum[idx][1]);
+    return (std::max(tmp, maxSum[idx][2]));
+}
+
+int main(void)
+{
+    std::cin >> n;
+    for (int i = 0; i < n; i++) {
+        std::cin >> val[i];
+        if (i == 0) {
+            maxSum[i][0] = 0;
+            maxSum[i][1] = val[i];
+            maxSum[i][2] = val[i];
+        } else {
+            maxSum[i][0] = maxInRow(i - 1);
+            maxSum[i][1] = maxSum[i - 1][0] + val[i];
+            maxSum[i][2] = maxSum[i - 1][1] + val[i];
+        }
+    }
+    std::cout << maxInRow(n - 1) << "\n";
+    return (0);
+}
